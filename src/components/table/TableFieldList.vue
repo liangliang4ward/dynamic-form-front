@@ -1,12 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowUp, ArrowDown } from '@element-plus/icons-vue'
+import { ArrowUp, ArrowDown, Setting } from '@element-plus/icons-vue'
 import { generateId } from '@/utils/tableStorage'
+import { TableField, DataSourceType, FieldDisplayConfig } from '@/types/tableTypes'
+import TableFieldAdvancedSettings from './TableFieldAdvancedSettings.vue'
 
 const props = defineProps({
   modelValue: {
-    type: Array,
+    type: Array as () => TableField[],
     required: true
   },
   groups: {
@@ -21,7 +23,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const selectedIds = ref([])
+const selectedIds = ref<string[]>([])
+
+// 高级设置弹窗
+const advancedSettingsVisible = ref(false)
+const currentEditingField = ref<TableField | null>(null)
 
 const fieldTypeOptions = [
   { label: '字符串(varchar)', value: 'varchar' },
@@ -62,7 +68,8 @@ const isIndeterminate = computed(() => {
   return selectedIds.value.length > 0 && selectedIds.value.length < sortedFields.value.length
 })
 
-const createDefaultField = () => {
+// 创建默认字段（包含默认的高级配置）
+const createDefaultField = (): TableField => {
   return {
     id: generateId(),
     fieldName: '',
@@ -75,7 +82,19 @@ const createDefaultField = () => {
     componentType: 'input',
     fieldDesc: '',
     groupId: '',
-    sort: props.modelValue.length
+    sort: props.modelValue.length,
+    dataSource: {
+      type: 'userInput' as DataSourceType
+    },
+    displayConfig: {
+      showInList: true,
+      showInForm: true,
+      showInDetail: true,
+      listSort: props.modelValue.length,
+      formSort: props.modelValue.length,
+      readonly: false,
+      hidden: false
+    }
   }
 }
 
@@ -86,7 +105,7 @@ const addField = () => {
   emit('update:modelValue', [...props.modelValue, newField])
 }
 
-const deleteField = async field => {
+const deleteField = async (field: TableField) => {
   if (props.disabled) return
 
   try {
@@ -153,11 +172,11 @@ const clearAllFields = async () => {
   }
 }
 
-const handleSelectionChange = val => {
+const handleSelectionChange = (val: TableField[]) => {
   selectedIds.value = val.map(v => v.id)
 }
 
-const handlePrimaryChange = (field, isPrimary) => {
+const handlePrimaryChange = (field: TableField, isPrimary: boolean) => {
   if (!isPrimary) {
     updateField(field.id, { isPrimary: false })
     return
@@ -173,7 +192,7 @@ const handlePrimaryChange = (field, isPrimary) => {
   emit('update:modelValue', newFields)
 }
 
-const updateField = (id, updates) => {
+const updateField = (id: string, updates: Partial<TableField>) => {
   const newFields = props.modelValue.map(f => {
     if (f.id === id) {
       return { ...f, ...updates }
@@ -183,7 +202,7 @@ const updateField = (id, updates) => {
   emit('update:modelValue', newFields)
 }
 
-const moveUp = index => {
+const moveUp = (index: number) => {
   if (props.disabled || index <= 0) return
 
   const newFields = [...props.modelValue]
@@ -201,7 +220,7 @@ const moveUp = index => {
   emit('update:modelValue', newFields)
 }
 
-const moveDown = index => {
+const moveDown = (index: number) => {
   if (props.disabled || index >= sortedFields.value.length - 1) return
 
   const newFields = [...props.modelValue]
@@ -217,6 +236,56 @@ const moveDown = index => {
   })
 
   emit('update:modelValue', newFields)
+}
+
+// 打开高级设置
+const openAdvancedSettings = (field: TableField) => {
+  currentEditingField.value = JSON.parse(JSON.stringify(field))
+  advancedSettingsVisible.value = true
+}
+
+// 保存高级设置
+const saveAdvancedSettings = () => {
+  if (!currentEditingField.value) return
+
+  updateField(currentEditingField.value.id, {
+    dataSource: currentEditingField.value.dataSource,
+    displayConfig: currentEditingField.value.displayConfig
+  })
+
+  advancedSettingsVisible.value = false
+  currentEditingField.value = null
+  ElMessage.success('保存成功')
+}
+
+// 关闭高级设置
+const closeAdvancedSettings = () => {
+  advancedSettingsVisible.value = false
+  currentEditingField.value = null
+}
+
+// 获取数据来源类型标签
+const getDataSourceTypeLabel = (type?: DataSourceType) => {
+  const labels: Record<DataSourceType, string> = {
+    userInput: '用户输入',
+    loginInfo: '登录信息',
+    systemDefault: '系统默认',
+    dict: '字典',
+    custom: '自定义'
+  }
+  return type ? labels[type] || '-' : '-'
+}
+
+// 获取显示配置摘要
+const getDisplaySummary = (config?: FieldDisplayConfig) => {
+  if (!config) return '未配置'
+  const items: string[] = []
+  if (config.showInList) items.push('列表')
+  if (config.showInForm) items.push('表单')
+  if (config.showInDetail) items.push('详情')
+  if (config.readonly) items.push('只读')
+  if (config.hidden) items.push('隐藏')
+  return items.length > 0 ? items.join('、') : '无'
 }
 </script>
 
@@ -383,6 +452,20 @@ const moveDown = index => {
           </template>
         </el-table-column>
 
+        <el-table-column label="数据来源" width="100">
+          <template #default="{ row }">
+            <el-tag size="small" :type="row.dataSource?.type === 'userInput' ? '' : 'primary'">
+              {{ getDataSourceTypeLabel(row.dataSource?.type) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="显示设置" min-width="120" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span class="display-summary">{{ getDisplaySummary(row.displayConfig) }}</span>
+          </template>
+        </el-table-column>
+
         <el-table-column label="字段说明" min-width="120">
           <template #default="{ row }">
             <el-input
@@ -427,8 +510,19 @@ const moveDown = index => {
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="80" fixed="right" align="center">
+        <el-table-column label="操作" width="150" fixed="right" align="center">
           <template #default="{ row }">
+            <el-button
+              type="primary"
+              link
+              size="small"
+              :icon="Setting"
+              @click="openAdvancedSettings(row)"
+              :disabled="disabled"
+              title="高级设置"
+            >
+              设置
+            </el-button>
             <el-button
               type="danger"
               link
@@ -451,9 +545,36 @@ const moveDown = index => {
       style="margin-top: 16px"
     >
       <template #title>
-        提示：主键字段只能有一个，设置新主键时会自动取消其他字段的主键设置。
+        提示：主键字段只能有一个，设置新主键时会自动取消其他字段的主键设置。点击"设置"按钮可配置字段的数据来源和显示属性。
       </template>
     </el-alert>
+
+    <!-- 高级设置弹窗 -->
+    <el-dialog
+      v-model="advancedSettingsVisible"
+      title="字段高级设置"
+      width="700px"
+      :close-on-click-modal="false"
+      destroy-on-close
+    >
+      <div v-if="currentEditingField" class="advanced-settings-content">
+        <el-alert
+          :title="`当前字段：${currentEditingField.fieldName || currentEditingField.fieldCode} (${currentEditingField.fieldCode})`"
+          type="info"
+          :closable="false"
+          show-icon
+          style="margin-bottom: 16px"
+        />
+        <TableFieldAdvancedSettings
+          v-model="currentEditingField"
+          :disabled="disabled"
+        />
+      </div>
+      <template #footer>
+        <el-button @click="closeAdvancedSettings">取消</el-button>
+        <el-button type="primary" @click="saveAdvancedSettings">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -492,5 +613,15 @@ const moveDown = index => {
 
 .sort-buttons .el-button {
   padding: 2px 4px;
+}
+
+.display-summary {
+  font-size: 12px;
+  color: #606266;
+}
+
+.advanced-settings-content {
+  max-height: 500px;
+  overflow-y: auto;
 }
 </style>

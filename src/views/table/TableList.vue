@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getTableList, deleteTable } from '@/api/tableMock'
+import { DataAnalysis } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -51,6 +52,11 @@ const handleView = row => {
 
 const handleEdit = row => {
   router.push(`/table/edit?id=${row.id}`)
+}
+
+// 数据管理
+const handleDataManage = row => {
+  router.push(`/table/data/list?tableId=${row.id}`)
 }
 
 const handleDelete = async row => {
@@ -148,8 +154,17 @@ onMounted(() => {
             {{ formatTime(row.updateTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
+            <el-button
+              type="success"
+              link
+              :icon="DataAnalysis"
+              @click="handleDataManage(row)"
+              title="数据管理"
+            >
+              数据
+            </el-button>
             <el-button type="primary" link @click="handleView(row)"> 查看 </el-button>
             <el-button type="primary" link @click="handleEdit(row)"> 编辑 </el-button>
             <el-button type="danger" link @click="handleDelete(row)"> 删除 </el-button>

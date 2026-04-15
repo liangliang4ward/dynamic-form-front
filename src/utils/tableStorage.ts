@@ -1,6 +1,7 @@
-import type { TableConfig } from '@/types/tableTypes'
+import type { TableConfig, DataRecord } from '@/types/tableTypes'
 
 const STORAGE_KEY = 'dynamic_form_table_configs'
+const DATA_STORAGE_KEY = 'dynamic_form_data_records'
 
 /**
  * 从localStorage获取所有表配置
@@ -87,4 +88,92 @@ export function getMainTableList(): TableConfig[] {
  */
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+}
+
+// ==================== 数据记录存储 ====================
+
+/**
+ * 从localStorage获取所有数据记录
+ */
+export function getAllDataRecords(): DataRecord[] {
+  const data = localStorage.getItem(DATA_STORAGE_KEY)
+  if (!data) {
+    return []
+  }
+  try {
+    return JSON.parse(data) as DataRecord[]
+  } catch {
+    return []
+  }
+}
+
+/**
+ * 保存所有数据记录到localStorage
+ */
+export function saveAllDataRecords(records: DataRecord[]): void {
+  localStorage.setItem(DATA_STORAGE_KEY, JSON.stringify(records))
+}
+
+/**
+ * 根据表ID获取数据记录列表
+ */
+export function getDataRecordsByTableId(tableId: string): DataRecord[] {
+  const records = getAllDataRecords()
+  return records.filter((r) => r.tableId === tableId)
+}
+
+/**
+ * 根据ID获取数据记录
+ */
+export function getDataRecordById(id: string): DataRecord | null {
+  const records = getAllDataRecords()
+  return records.find((r) => r.id === id) || null
+}
+
+/**
+ * 保存数据记录（新增或更新）
+ */
+export function saveDataRecord(record: DataRecord): void {
+  const records = getAllDataRecords()
+  const index = records.findIndex((r) => r.id === record.id)
+  
+  const now = new Date().toISOString()
+  if (index >= 0) {
+    records[index] = { ...record, updateTime: now }
+  } else {
+    records.push({ ...record, createTime: now, updateTime: now })
+  }
+  
+  saveAllDataRecords(records)
+}
+
+/**
+ * 根据ID删除数据记录
+ */
+export function deleteDataRecord(id: string): boolean {
+  const records = getAllDataRecords()
+  const index = records.findIndex((r) => r.id === id)
+  
+  if (index >= 0) {
+    records.splice(index, 1)
+    saveAllDataRecords(records)
+    return true
+  }
+  
+  return false
+}
+
+/**
+ * 根据表ID删除所有数据记录
+ */
+export function deleteDataRecordsByTableId(tableId: string): number {
+  const records = getAllDataRecords()
+  const filtered = records.filter((r) => r.tableId !== tableId)
+  const deletedCount = records.length - filtered.length
+  
+  if (deletedCount > 0) {
+    saveAllDataRecords(filtered)
+  }
+  
+  return deletedCount
 }

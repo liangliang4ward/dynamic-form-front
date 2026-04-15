@@ -9,6 +9,7 @@ import TableBaseForm from '@/components/table/TableBaseForm.vue'
 import TableGroupList from '@/components/table/TableGroupList.vue'
 import TableFieldList from '@/components/table/TableFieldList.vue'
 import TableIndexList from '@/components/table/TableIndexList.vue'
+import TableQueryFieldList from '@/components/table/TableQueryFieldList.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -52,6 +53,24 @@ watch(
   { deep: true }
 )
 
+// 监听字段变化，同步更新查询字段
+watch(
+  () => tableConfig.value.fields,
+  (newFields, oldFields) => {
+    if (!oldFields || oldFields.length === 0) return
+
+    const newFieldIds = newFields.map(f => f.id)
+    const removedFieldIds = oldFields.map(f => f.id).filter(id => !newFieldIds.includes(id))
+
+    if (removedFieldIds.length > 0) {
+      tableConfig.value.queryFields = tableConfig.value.queryFields.filter(
+        qf => !removedFieldIds.includes(qf.fieldId)
+      )
+    }
+  },
+  { deep: true }
+)
+
 const originalConfig = ref(null)
 
 const jsonPreviewVisible = ref(false)
@@ -64,6 +83,10 @@ const loadData = async () => {
   try {
     const data = await getTableDetail(id)
     if (data) {
+      // 确保 queryFields 存在
+      if (!data.queryFields) {
+        data.queryFields = []
+      }
       tableConfig.value = JSON.parse(JSON.stringify(data))
       originalConfig.value = JSON.parse(JSON.stringify(data))
     } else {
@@ -162,7 +185,8 @@ const hasUnsavedChanges = computed(() => {
       tableConfig.value.info.tableCode !== '' ||
       tableConfig.value.groups.length > 0 ||
       tableConfig.value.fields.length > 0 ||
-      tableConfig.value.indexes.length > 0
+      tableConfig.value.indexes.length > 0 ||
+      tableConfig.value.queryFields.length > 0
     )
   }
   return JSON.stringify(tableConfig.value) !== JSON.stringify(originalConfig.value)
@@ -251,6 +275,14 @@ onBeforeUnmount(() => {
         <el-tab-pane label="索引列表" name="indexes">
           <TableIndexList
             v-model="tableConfig.indexes"
+            :fields="tableConfig.fields"
+            :disabled="isViewMode"
+          />
+        </el-tab-pane>
+
+        <el-tab-pane label="查询字段" name="queryFields">
+          <TableQueryFieldList
+            v-model="tableConfig.queryFields"
             :fields="tableConfig.fields"
             :disabled="isViewMode"
           />

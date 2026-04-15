@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    DynamicForm: typeof import('./components/table/DynamicForm.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
@@ -40,9 +41,11 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TableBaseForm: typeof import('./components/table/TableBaseForm.vue')['default']
+    TableFieldAdvancedSettings: typeof import('./components/table/TableFieldAdvancedSettings.vue')['default']
     TableFieldList: typeof import('./components/table/TableFieldList.vue')['default']
     TableGroupList: typeof import('./components/table/TableGroupList.vue')['default']
     TableIndexList: typeof import('./components/table/TableIndexList.vue')['default']
+    TableQueryFieldList: typeof import('./components/table/TableQueryFieldList.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

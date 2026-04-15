@@ -23,6 +23,16 @@ const routes = [
     component: () => import('@/views/table/TableEdit.vue')
   },
   {
+    path: '/table/data/list',
+    name: 'DataList',
+    component: () => import('@/views/table/DataList.vue')
+  },
+  {
+    path: '/table/data/edit',
+    name: 'DataEdit',
+    component: () => import('@/views/table/DataEdit.vue')
+  },
+  {
     path: '/debug-token',
     name: 'DebugToken',
     component: () => import('@/views/DebugToken.vue')

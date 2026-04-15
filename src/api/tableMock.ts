@@ -1,7 +1,10 @@
 import type {
   TableConfig,
   TableListQuery,
-  TableListResponse
+  TableListResponse,
+  DataRecord,
+  DataListQuery,
+  DataListResponse
 } from '@/types/tableTypes'
 import {
   getAllTableConfigs,
@@ -10,7 +13,12 @@ import {
   deleteTableConfig,
   isTableCodeUnique,
   getMainTableList,
-  generateId
+  generateId,
+  getAllDataRecords,
+  getDataRecordsByTableId,
+  getDataRecordById,
+  saveDataRecord,
+  deleteDataRecord
 } from '@/utils/tableStorage'
 
 /**
@@ -67,6 +75,11 @@ export async function saveTable(config: TableConfig): Promise<{ success: boolean
       success: false,
       message: '表编码已存在，请使用其他编码'
     }
+  }
+  
+  // 确保queryFields存在
+  if (!config.queryFields) {
+    config.queryFields = []
   }
   
   // 更新时间
@@ -139,6 +152,111 @@ export function createNewTableConfig(): TableConfig {
     groups: [],
     fields: [],
     indexes: [],
+    queryFields: [],
+    createTime: '',
+    updateTime: ''
+  }
+}
+
+// ==================== 数据记录API ====================
+
+/**
+ * 获取数据列表
+ */
+export async function getDataList(query: DataListQuery): Promise<DataListResponse> {
+  await delay()
+  
+  let records = getDataRecordsByTableId(query.tableId)
+  
+  // 简单的条件过滤（Mock实现）
+  if (query.conditions && Object.keys(query.conditions).length > 0) {
+    records = records.filter(record => {
+      for (const [key, value] of Object.entries(query.conditions!)) {
+        if (value === undefined || value === null || value === '') continue
+        const recordValue = record.data[key]
+        if (recordValue === undefined || recordValue === null) return false
+        // 简单的包含匹配
+        if (!String(recordValue).toLowerCase().includes(String(value).toLowerCase())) {
+          return false
+        }
+      }
+      return true
+    })
+  }
+  
+  // 按创建时间倒序
+  records.sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime())
+  
+  // 分页
+  const page = query.page || 1
+  const pageSize = query.pageSize || 10
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  const pagedRecords = records.slice(start, end)
+  
+  return {
+    list: pagedRecords,
+    total: records.length
+  }
+}
+
+/**
+ * 获取数据记录详情
+ */
+export async function getDataDetail(id: string): Promise<DataRecord | null> {
+  await delay()
+  return getDataRecordById(id)
+}
+
+/**
+ * 保存数据记录
+ */
+export async function saveData(record: DataRecord): Promise<{ success: boolean; message: string; id: string }> {
+  await delay()
+  
+  const isNew = !record.id
+  if (isNew) {
+    record.id = generateId()
+  }
+  
+  saveDataRecord(record)
+  
+  return {
+    success: true,
+    message: isNew ? '新增成功' : '更新成功',
+    id: record.id
+  }
+}
+
+/**
+ * 删除数据记录
+ */
+export async function deleteData(id: string): Promise<{ success: boolean; message: string }> {
+  await delay()
+  
+  const result = deleteDataRecord(id)
+  
+  if (result) {
+    return {
+      success: true,
+      message: '删除成功'
+    }
+  }
+  
+  return {
+    success: false,
+    message: '删除失败，数据不存在'
+  }
+}
+
+/**
+ * 生成新的数据记录（带默认值）
+ */
+export function createNewDataRecord(tableId: string): DataRecord {
+  return {
+    id: '',
+    tableId,
+    data: {},
     createTime: '',
     updateTime: ''
   }

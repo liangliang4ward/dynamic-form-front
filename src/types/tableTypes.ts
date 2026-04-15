@@ -43,12 +43,88 @@ export enum IndexType {
 }
 
 /**
+ * 查询类型枚举
+ */
+export enum QueryType {
+  EQUAL = 'equal',
+  LIKE = 'like',
+  RANGE = 'range',
+  IN = 'in',
+  GREATER = 'greater',
+  LESS = 'less',
+  GREATER_EQUAL = 'greaterEqual',
+  LESS_EQUAL = 'lessEqual'
+}
+
+/**
+ * 数据来源类型枚举
+ */
+export enum DataSourceType {
+  USER_INPUT = 'userInput',
+  LOGIN_INFO = 'loginInfo',
+  SYSTEM_DEFAULT = 'systemDefault',
+  DICT = 'dict',
+  CUSTOM = 'custom'
+}
+
+/**
+ * 登录信息字段枚举
+ */
+export enum LoginInfoField {
+  USER_ID = 'userId',
+  USER_NAME = 'userName',
+  DEPT_ID = 'deptId',
+  DEPT_NAME = 'deptName',
+  ROLE_ID = 'roleId',
+  ROLE_NAME = 'roleName',
+  TENANT_ID = 'tenantId',
+  ORG_ID = 'orgId'
+}
+
+/**
  * 分组接口
  */
 export interface TableGroup {
   id: string
   name: string
   sort: number
+}
+
+/**
+ * 查询字段配置接口
+ */
+export interface QueryField {
+  id: string
+  fieldId: string
+  queryType: QueryType
+  sort: number
+  enabled: boolean
+}
+
+/**
+ * 数据来源配置接口
+ */
+export interface DataSourceConfig {
+  type: DataSourceType
+  loginInfoField?: LoginInfoField
+  dictCode?: string
+  customValue?: string
+  expression?: string
+}
+
+/**
+ * 字段显示配置接口
+ */
+export interface FieldDisplayConfig {
+  showInList: boolean
+  showInForm: boolean
+  showInDetail: boolean
+  listWidth?: number
+  listSort: number
+  formSort: number
+  readonly: boolean
+  hidden: boolean
+  placeholder?: string
 }
 
 /**
@@ -67,6 +143,8 @@ export interface TableField {
   fieldDesc?: string
   groupId: string
   sort: number
+  dataSource?: DataSourceConfig
+  displayConfig?: FieldDisplayConfig
 }
 
 /**
@@ -101,6 +179,7 @@ export interface TableConfig {
   groups: TableGroup[]
   fields: TableField[]
   indexes: TableIndex[]
+  queryFields: QueryField[]
   createTime: string
   updateTime: string
 }
@@ -129,4 +208,35 @@ export interface ValidationResult {
   valid: boolean
   message?: string
   field?: string
+}
+
+/**
+ * 数据记录接口（用于数据列表和录入）
+ */
+export interface DataRecord {
+  id: string
+  tableId: string
+  data: Record<string, any>
+  createTime: string
+  updateTime: string
+  createBy?: string
+  updateBy?: string
+}
+
+/**
+ * 数据列表查询参数
+ */
+export interface DataListQuery {
+  tableId: string
+  page?: number
+  pageSize?: number
+  conditions?: Record<string, any>
+}
+
+/**
+ * 数据列表响应
+ */
+export interface DataListResponse {
+  list: DataRecord[]
+  total: number
 }
