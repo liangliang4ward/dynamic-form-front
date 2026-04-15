@@ -157,22 +157,24 @@ const moveDown = index => {
 
     <div v-else class="index-table-wrapper">
       <el-table :data="sortedIndexes" border stripe size="small" style="width: 100%">
-        <el-table-column label="排序" width="80" align="center">
+        <el-table-column label="排序" width="70" align="center">
           <template #default="{ $index }">
-            <el-button
-              type="text"
-              size="small"
-              :icon="ArrowUp"
-              :disabled="disabled || $index === 0"
-              @click="moveUp($index)"
-            />
-            <el-button
-              type="text"
-              size="small"
-              :icon="ArrowDown"
-              :disabled="disabled || $index === sortedIndexes.length - 1"
-              @click="moveDown($index)"
-            />
+            <div class="sort-buttons">
+              <el-button
+                type="text"
+                size="small"
+                :icon="ArrowUp"
+                :disabled="disabled || $index === 0"
+                @click="moveUp($index)"
+              />
+              <el-button
+                type="text"
+                size="small"
+                :icon="ArrowDown"
+                :disabled="disabled || $index === sortedIndexes.length - 1"
+                @click="moveDown($index)"
+              />
+            </div>
           </template>
         </el-table-column>
 
@@ -305,5 +307,16 @@ const moveDown = index => {
 
 .index-table-wrapper {
   overflow-x: auto;
+}
+
+.sort-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sort-buttons .el-button {
+  padding: 2px 4px;
 }
 </style>
