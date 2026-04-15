@@ -8,7 +8,7 @@ import TableFieldAdvancedSettings from './TableFieldAdvancedSettings.vue'
 
 const props = defineProps({
   modelValue: {
-    type: Array as () => TableField[],
+    type: Array,
     required: true
   },
   groups: {

@@ -7,11 +7,11 @@ import { QueryField, TableField, QueryType } from '@/types/tableTypes'
 
 const props = defineProps({
   modelValue: {
-    type: Array as () => QueryField[],
+    type: Array,
     required: true
   },
   fields: {
-    type: Array as () => TableField[],
+    type: Array,
     default: () => []
   },
   disabled: {

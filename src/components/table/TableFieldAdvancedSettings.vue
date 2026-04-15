@@ -10,7 +10,7 @@ import {
 
 const props = defineProps({
   modelValue: {
-    type: Object as () => TableField,
+    type: Object,
     required: true
   },
   disabled: {

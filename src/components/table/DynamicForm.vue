@@ -4,7 +4,7 @@ import { TableField, FormComponentType, DataSourceType, LoginInfoField } from '@
 
 const props = defineProps({
   fields: {
-    type: Array as () => TableField[],
+    type: Array,
     required: true
   },
   modelValue: {
@@ -20,7 +20,7 @@ const props = defineProps({
     default: false
   },
   mode: {
-    type: String as () => 'form' | 'detail',
+    type: String,
     default: 'form'
   }
 })
