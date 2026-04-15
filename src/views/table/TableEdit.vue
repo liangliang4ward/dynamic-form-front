@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
@@ -31,6 +31,26 @@ const pageTitle = computed(() => {
 })
 
 const tableConfig = ref(createNewTableConfig())
+
+watch(
+  () => tableConfig.value.groups,
+  (newGroups, oldGroups) => {
+    if (!oldGroups || oldGroups.length === 0) return
+
+    const newGroupIds = newGroups.map(g => g.id)
+    const removedGroupIds = oldGroups.map(g => g.id).filter(id => !newGroupIds.includes(id))
+
+    if (removedGroupIds.length > 0) {
+      tableConfig.value.fields = tableConfig.value.fields.map(field => {
+        if (removedGroupIds.includes(field.groupId)) {
+          return { ...field, groupId: '' }
+        }
+        return field
+      })
+    }
+  },
+  { deep: true }
+)
 
 const originalConfig = ref(null)
 
