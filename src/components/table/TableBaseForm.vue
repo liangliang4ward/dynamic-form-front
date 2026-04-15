@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getMainTables, checkTableCode } from '@/api/tableMock'
 
@@ -30,34 +30,8 @@ const tableTypeOptions = [
   { label: '附表', value: 'slave' }
 ]
 
-const formData = ref({
-  tableName: '',
-  tableCode: '',
-  tableDesc: '',
-  tableType: 'single',
-  mainTableCode: undefined
-})
-
-watch(
-  () => props.modelValue,
-  newVal => {
-    if (newVal) {
-      formData.value = { ...newVal }
-    }
-  },
-  { immediate: true, deep: true }
-)
-
-watch(
-  formData,
-  newVal => {
-    emit('update:modelValue', { ...newVal })
-  },
-  { deep: true }
-)
-
 const showMainTableSelect = computed(() => {
-  return formData.value.tableType === 'slave'
+  return props.modelValue.tableType === 'slave'
 })
 
 const formRules = computed(() => ({
@@ -112,10 +86,13 @@ const loadMainTables = async () => {
 }
 
 watch(
-  () => formData.value.tableType,
+  () => props.modelValue.tableType,
   newType => {
     if (newType !== 'slave') {
-      formData.value.mainTableCode = undefined
+      emit('update:modelValue', {
+        ...props.modelValue,
+        mainTableCode: undefined
+      })
     }
   }
 )
@@ -147,7 +124,7 @@ onMounted(() => {
 <template>
   <el-form
     ref="formRef"
-    :model="formData"
+    :model="modelValue"
     :rules="formRules"
     :disabled="disabled"
     label-width="120px"
@@ -156,7 +133,7 @@ onMounted(() => {
       <el-col :span="12">
         <el-form-item label="表名称" prop="tableName">
           <el-input
-            v-model="formData.tableName"
+            v-model="modelValue.tableName"
             placeholder="请输入表名称"
             maxlength="100"
             show-word-limit
@@ -166,7 +143,7 @@ onMounted(() => {
       <el-col :span="12">
         <el-form-item label="表编码" prop="tableCode">
           <el-input
-            v-model="formData.tableCode"
+            v-model="modelValue.tableCode"
             placeholder="请输入表编码（英文）"
             maxlength="50"
             show-word-limit
@@ -178,7 +155,7 @@ onMounted(() => {
     <el-row :gutter="20">
       <el-col :span="12">
         <el-form-item label="表类型" prop="tableType">
-          <el-select v-model="formData.tableType" placeholder="请选择表类型" style="width: 100%">
+          <el-select v-model="modelValue.tableType" placeholder="请选择表类型" style="width: 100%">
             <el-option
               v-for="item in tableTypeOptions"
               :key="item.value"
@@ -191,7 +168,7 @@ onMounted(() => {
       <el-col :span="12" v-if="showMainTableSelect">
         <el-form-item label="关联主表" prop="mainTableCode">
           <el-select
-            v-model="formData.mainTableCode"
+            v-model="modelValue.mainTableCode"
             placeholder="请选择关联的主表"
             style="width: 100%"
             filterable
@@ -209,7 +186,7 @@ onMounted(() => {
 
     <el-form-item label="表描述" prop="tableDesc">
       <el-input
-        v-model="formData.tableDesc"
+        v-model="modelValue.tableDesc"
         type="textarea"
         :rows="3"
         placeholder="请输入表描述"

@@ -20,6 +20,7 @@ module.exports = {
     'vue/require-default-prop': 'off',
     'vue/require-explicit-emits': 'off',
     'vue/no-setup-props-destructure': 'off',
+    'vue/no-mutating-props': 'off',
 
     // JavaScript 规则
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
