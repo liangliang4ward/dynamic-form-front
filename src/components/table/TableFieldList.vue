@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowUp, ArrowDown, Setting } from '@element-plus/icons-vue'
 import { generateId } from '@/utils/tableStorage'
-import { TableField, DataSourceType, FieldDisplayConfig } from '@/types/tableTypes'
 import TableFieldAdvancedSettings from './TableFieldAdvancedSettings.vue'
 
 const props = defineProps({
@@ -23,11 +22,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const selectedIds = ref<string[]>([])
+const selectedIds = ref([])
 
 // 高级设置弹窗
 const advancedSettingsVisible = ref(false)
-const currentEditingField = ref<TableField | null>(null)
+const currentEditingField = ref(null)
 
 const fieldTypeOptions = [
   { label: '字符串(varchar)', value: 'varchar' },
@@ -69,7 +68,7 @@ const isIndeterminate = computed(() => {
 })
 
 // 创建默认字段（包含默认的高级配置）
-const createDefaultField = (): TableField => {
+const createDefaultField = () => {
   return {
     id: generateId(),
     fieldName: '',
@@ -84,7 +83,7 @@ const createDefaultField = (): TableField => {
     groupId: '',
     sort: props.modelValue.length,
     dataSource: {
-      type: 'userInput' as DataSourceType
+      type: 'userInput'
     },
     displayConfig: {
       showInList: true,
@@ -105,7 +104,7 @@ const addField = () => {
   emit('update:modelValue', [...props.modelValue, newField])
 }
 
-const deleteField = async (field: TableField) => {
+const deleteField = async (field) => {
   if (props.disabled) return
 
   try {
@@ -172,11 +171,11 @@ const clearAllFields = async () => {
   }
 }
 
-const handleSelectionChange = (val: TableField[]) => {
+const handleSelectionChange = (val) => {
   selectedIds.value = val.map(v => v.id)
 }
 
-const handlePrimaryChange = (field: TableField, isPrimary: boolean) => {
+const handlePrimaryChange = (field, isPrimary) => {
   if (!isPrimary) {
     updateField(field.id, { isPrimary: false })
     return
@@ -192,7 +191,7 @@ const handlePrimaryChange = (field: TableField, isPrimary: boolean) => {
   emit('update:modelValue', newFields)
 }
 
-const updateField = (id: string, updates: Partial<TableField>) => {
+const updateField = (id, updates) => {
   const newFields = props.modelValue.map(f => {
     if (f.id === id) {
       return { ...f, ...updates }
@@ -202,7 +201,7 @@ const updateField = (id: string, updates: Partial<TableField>) => {
   emit('update:modelValue', newFields)
 }
 
-const moveUp = (index: number) => {
+const moveUp = (index) => {
   if (props.disabled || index <= 0) return
 
   const newFields = [...props.modelValue]
@@ -220,7 +219,7 @@ const moveUp = (index: number) => {
   emit('update:modelValue', newFields)
 }
 
-const moveDown = (index: number) => {
+const moveDown = (index) => {
   if (props.disabled || index >= sortedFields.value.length - 1) return
 
   const newFields = [...props.modelValue]
@@ -239,7 +238,7 @@ const moveDown = (index: number) => {
 }
 
 // 打开高级设置
-const openAdvancedSettings = (field: TableField) => {
+const openAdvancedSettings = (field) => {
   currentEditingField.value = JSON.parse(JSON.stringify(field))
   advancedSettingsVisible.value = true
 }
@@ -265,8 +264,8 @@ const closeAdvancedSettings = () => {
 }
 
 // 获取数据来源类型标签
-const getDataSourceTypeLabel = (type?: DataSourceType) => {
-  const labels: Record<DataSourceType, string> = {
+const getDataSourceTypeLabel = (type) => {
+  const labels = {
     userInput: '用户输入',
     loginInfo: '登录信息',
     systemDefault: '系统默认',
@@ -277,9 +276,9 @@ const getDataSourceTypeLabel = (type?: DataSourceType) => {
 }
 
 // 获取显示配置摘要
-const getDisplaySummary = (config?: FieldDisplayConfig) => {
+const getDisplaySummary = (config) => {
   if (!config) return '未配置'
-  const items: string[] = []
+  const items = []
   if (config.showInList) items.push('列表')
   if (config.showInForm) items.push('表单')
   if (config.showInDetail) items.push('详情')

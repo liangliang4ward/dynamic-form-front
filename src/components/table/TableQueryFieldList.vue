@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import { generateId } from '@/utils/tableStorage'
-import { QueryField, TableField, QueryType } from '@/types/tableTypes'
 
 const props = defineProps({
   modelValue: {
@@ -24,14 +23,14 @@ const emit = defineEmits(['update:modelValue'])
 
 // 查询类型选项
 const queryTypeOptions = [
-  { label: '等于', value: 'equal' as QueryType },
-  { label: '模糊匹配', value: 'like' as QueryType },
-  { label: '范围查询', value: 'range' as QueryType },
-  { label: '包含', value: 'in' as QueryType },
-  { label: '大于', value: 'greater' as QueryType },
-  { label: '小于', value: 'less' as QueryType },
-  { label: '大于等于', value: 'greaterEqual' as QueryType },
-  { label: '小于等于', value: 'lessEqual' as QueryType }
+  { label: '等于', value: 'equal' },
+  { label: '模糊匹配', value: 'like' },
+  { label: '范围查询', value: 'range' },
+  { label: '包含', value: 'in' },
+  { label: '大于', value: 'greater' },
+  { label: '小于', value: 'less' },
+  { label: '大于等于', value: 'greaterEqual' },
+  { label: '小于等于', value: 'lessEqual' }
 ]
 
 // 排序后的查询字段
@@ -54,23 +53,23 @@ const fieldOptions = computed(() => {
 })
 
 // 获取字段信息
-const getFieldInfo = (fieldId: string) => {
+const getFieldInfo = (fieldId) => {
   return props.fields.find(f => f.id === fieldId)
 }
 
 // 创建默认查询字段
-const createDefaultQueryField = (fieldId: string): QueryField => {
+const createDefaultQueryField = (fieldId) => {
   return {
     id: generateId(),
     fieldId,
-    queryType: 'equal' as QueryType,
+    queryType: 'equal',
     sort: props.modelValue.length,
     enabled: true
   }
 }
 
 // 添加查询字段
-const addQueryField = (fieldId: string) => {
+const addQueryField = (fieldId) => {
   if (props.disabled) return
 
   if (!fieldId) {
@@ -95,7 +94,7 @@ const addAllAvailableFields = () => {
 }
 
 // 删除查询字段
-const deleteQueryField = (queryField: QueryField) => {
+const deleteQueryField = (queryField) => {
   if (props.disabled) return
 
   const newQueryFields = props.modelValue
@@ -106,7 +105,7 @@ const deleteQueryField = (queryField: QueryField) => {
 }
 
 // 更新查询字段
-const updateQueryField = (id: string, updates: Partial<QueryField>) => {
+const updateQueryField = (id, updates) => {
   const newQueryFields = props.modelValue.map(qf => {
     if (qf.id === id) {
       return { ...qf, ...updates }
@@ -117,7 +116,7 @@ const updateQueryField = (id: string, updates: Partial<QueryField>) => {
 }
 
 // 上移
-const moveUp = (index: number) => {
+const moveUp = (index) => {
   if (props.disabled || index <= 0) return
 
   const newQueryFields = [...props.modelValue]
@@ -136,7 +135,7 @@ const moveUp = (index: number) => {
 }
 
 // 下移
-const moveDown = (index: number) => {
+const moveDown = (index) => {
   if (props.disabled || index >= sortedQueryFields.value.length - 1) return
 
   const newQueryFields = [...props.modelValue]

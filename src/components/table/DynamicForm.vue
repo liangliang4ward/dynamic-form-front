@@ -1,6 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import { TableField, FormComponentType, DataSourceType, LoginInfoField } from '@/types/tableTypes'
+import { ref, computed, watch, onMounted, h } from 'vue'
 
 const props = defineProps({
   fields: {
@@ -31,7 +30,7 @@ const emit = defineEmits(['update:modelValue'])
 const formRef = ref()
 
 // 本地表单数据
-const formData = ref<Record<string, any>>({ ...props.modelValue })
+const formData = ref({ ...props.modelValue })
 
 // 监听外部值变化
 watch(
@@ -81,18 +80,18 @@ const sortedFields = computed(() => {
 })
 
 // 获取字段值
-const getFieldValue = (field: TableField) => {
+const getFieldValue = (field) => {
   return formData.value[field.fieldCode]
 }
 
 // 设置字段值
-const setFieldValue = (field: TableField, value: any) => {
+const setFieldValue = (field, value) => {
   formData.value[field.fieldCode] = value
   emit('update:modelValue', { ...formData.value })
 }
 
 // 检查字段是否只读
-const isFieldReadonly = (field: TableField) => {
+const isFieldReadonly = (field) => {
   if (props.readonly || props.disabled) return true
   if (field.displayConfig?.readonly) return true
   
@@ -102,13 +101,13 @@ const isFieldReadonly = (field: TableField) => {
 }
 
 // 获取登录信息值
-const getLoginInfoValue = (loginInfoField?: LoginInfoField) => {
+const getLoginInfoValue = (loginInfoField) => {
   if (!loginInfoField) return undefined
   return mockLoginInfo.value[loginInfoField]
 }
 
 // 获取数据来源的默认值
-const getDataSourceDefaultValue = (field: TableField) => {
+const getDataSourceDefaultValue = (field) => {
   const dataSource = field.dataSource
   if (!dataSource) return field.defaultValue
 
@@ -128,7 +127,7 @@ const getDataSourceDefaultValue = (field: TableField) => {
 const initFormData = () => {
   // 只在新增时初始化（modelValue为空时）
   if (Object.keys(props.modelValue).length === 0) {
-    const initialData: Record<string, any> = {}
+    const initialData = {}
     
     props.fields.forEach(field => {
       const defaultValue = getDataSourceDefaultValue(field)
@@ -144,138 +143,20 @@ const initFormData = () => {
   }
 }
 
-// 渲染表单组件
-const renderFormComponent = (field: TableField) => {
-  const componentType = field.componentType as FormComponentType
-  const value = getFieldValue(field)
-  const readonly = isFieldReadonly(field)
-  const placeholder = field.displayConfig?.placeholder || `请输入${field.fieldName}`
+// 获取占位符
+const getPlaceholder = (field) => {
+  return field.displayConfig?.placeholder || `请输入${field.fieldName}`
+}
 
-  // 详情模式下显示文本
-  if (props.mode === 'detail') {
-    return <span class="detail-value">{value ?? '-'}</span>
-  }
-
-  switch (componentType) {
-    case 'input':
-      return (
-        <el-input
-          v-model={formData.value[field.fieldCode]}
-          placeholder={placeholder}
-          disabled={props.disabled}
-          readonly={readonly}
-          clearable
-          onInput={() => emit('update:modelValue', { ...formData.value })}
-        />
-      )
-    case 'number':
-      return (
-        <el-input-number
-          v-model={formData.value[field.fieldCode]}
-          placeholder={placeholder}
-          disabled={props.disabled}
-          readonly={readonly}
-          controls-position="right"
-          style="width: 100%"
-          onChange={() => emit('update:modelValue', { ...formData.value })}
-        />
-      )
-    case 'radio':
-      return (
-        <el-radio-group
-          v-model={formData.value[field.fieldCode]}
-          disabled={props.disabled || readonly}
-          onChange={() => emit('update:modelValue', { ...formData.value })}
-        >
-          <el-radio label="是">是</el-radio>
-          <el-radio label="否">否</el-radio>
-        </el-radio-group>
-      )
-    case 'checkbox':
-      return (
-        <el-checkbox-group
-          v-model={formData.value[field.fieldCode]}
-          disabled={props.disabled || readonly}
-          onChange={() => emit('update:modelValue', { ...formData.value })}
-        >
-          <el-checkbox label="选项1">选项1</el-checkbox>
-          <el-checkbox label="选项2">选项2</el-checkbox>
-          <el-checkbox label="选项3">选项3</el-checkbox>
-        </el-checkbox-group>
-      )
-    case 'select':
-      return (
-        <el-select
-          v-model={formData.value[field.fieldCode]}
-          placeholder={placeholder}
-          disabled={props.disabled}
-          readonly={readonly}
-          clearable
-          filterable
-          style="width: 100%"
-          onChange={() => emit('update:modelValue', { ...formData.value })}
-        >
-          <el-option label="选项1" value="option1" />
-          <el-option label="选项2" value="option2" />
-          <el-option label="选项3" value="option3" />
-        </el-select>
-      )
-    case 'date':
-      return (
-        <el-date-picker
-          v-model={formData.value[field.fieldCode]}
-          type="date"
-          placeholder={placeholder}
-          disabled={props.disabled}
-          readonly={readonly}
-          clearable
-          style="width: 100%"
-          value-format="YYYY-MM-DD"
-          onChange={() => emit('update:modelValue', { ...formData.value })}
-        />
-      )
-    case 'time':
-      return (
-        <el-time-picker
-          v-model={formData.value[field.fieldCode]}
-          placeholder={placeholder}
-          disabled={props.disabled}
-          readonly={readonly}
-          clearable
-          style="width: 100%"
-          value-format="HH:mm:ss"
-          onChange={() => emit('update:modelValue', { ...formData.value })}
-        />
-      )
-    case 'richText':
-      return (
-        <el-input
-          v-model={formData.value[field.fieldCode]}
-          type="textarea"
-          :rows={4}
-          placeholder={placeholder}
-          disabled={props.disabled}
-          readonly={readonly}
-          onInput={() => emit('update:modelValue', { ...formData.value })}
-        />
-      )
-    default:
-      return (
-        <el-input
-          v-model={formData.value[field.fieldCode]}
-          placeholder={placeholder}
-          disabled={props.disabled}
-          readonly={readonly}
-          clearable
-          onInput={() => emit('update:modelValue', { ...formData.value })}
-        />
-      )
-  }
+// 处理输入变化
+const handleInputChange = (field, value) => {
+  formData.value[field.fieldCode] = value
+  emit('update:modelValue', { ...formData.value })
 }
 
 // 构建表单规则
 const formRules = computed(() => {
-  const rules: Record<string, any[]> = {}
+  const rules = {}
   
   sortedFields.value.forEach(field => {
     if (field.required && !isFieldReadonly(field)) {
@@ -338,10 +219,130 @@ onMounted(() => {
           :label="field.fieldName"
           :prop="field.fieldCode"
         >
-          <component :is="() => renderFormComponent(field)" />
+          <!-- 详情模式 -->
+          <template v-if="mode === 'detail'">
+            <span class="detail-value">{{ getFieldValue(field) ?? '-' }}</span>
+          </template>
+
+          <!-- 输入框 -->
+          <el-input
+            v-else-if="field.componentType === 'input'"
+            v-model="formData[field.fieldCode]"
+            :placeholder="getPlaceholder(field)"
+            :disabled="disabled"
+            :readonly="isFieldReadonly(field)"
+            clearable
+            @input="handleInputChange(field, formData[field.fieldCode])"
+          />
+
+          <!-- 数字框 -->
+          <el-input-number
+            v-else-if="field.componentType === 'number'"
+            v-model="formData[field.fieldCode]"
+            :placeholder="getPlaceholder(field)"
+            :disabled="disabled"
+            :readonly="isFieldReadonly(field)"
+            controls-position="right"
+            style="width: 100%"
+            @change="handleInputChange(field, formData[field.fieldCode])"
+          />
+
+          <!-- 单选 -->
+          <el-radio-group
+            v-else-if="field.componentType === 'radio'"
+            v-model="formData[field.fieldCode]"
+            :disabled="disabled || isFieldReadonly(field)"
+            @change="handleInputChange(field, formData[field.fieldCode])"
+          >
+            <el-radio label="是">是</el-radio>
+            <el-radio label="否">否</el-radio>
+          </el-radio-group>
+
+          <!-- 多选 -->
+          <el-checkbox-group
+            v-else-if="field.componentType === 'checkbox'"
+            v-model="formData[field.fieldCode]"
+            :disabled="disabled || isFieldReadonly(field)"
+            @change="handleInputChange(field, formData[field.fieldCode])"
+          >
+            <el-checkbox label="选项1">选项1</el-checkbox>
+            <el-checkbox label="选项2">选项2</el-checkbox>
+            <el-checkbox label="选项3">选项3</el-checkbox>
+          </el-checkbox-group>
+
+          <!-- 下拉 -->
+          <el-select
+            v-else-if="field.componentType === 'select'"
+            v-model="formData[field.fieldCode]"
+            :placeholder="getPlaceholder(field)"
+            :disabled="disabled"
+            :readonly="isFieldReadonly(field)"
+            clearable
+            filterable
+            style="width: 100%"
+            @change="handleInputChange(field, formData[field.fieldCode])"
+          >
+            <el-option label="选项1" value="option1" />
+            <el-option label="选项2" value="option2" />
+            <el-option label="选项3" value="option3" />
+          </el-select>
+
+          <!-- 日期 -->
+          <el-date-picker
+            v-else-if="field.componentType === 'date'"
+            v-model="formData[field.fieldCode]"
+            type="date"
+            :placeholder="getPlaceholder(field)"
+            :disabled="disabled"
+            :readonly="isFieldReadonly(field)"
+            clearable
+            style="width: 100%"
+            value-format="YYYY-MM-DD"
+            @change="handleInputChange(field, formData[field.fieldCode])"
+          />
+
+          <!-- 时间 -->
+          <el-time-picker
+            v-else-if="field.componentType === 'time'"
+            v-model="formData[field.fieldCode]"
+            :placeholder="getPlaceholder(field)"
+            :disabled="disabled"
+            :readonly="isFieldReadonly(field)"
+            clearable
+            style="width: 100%"
+            value-format="HH:mm:ss"
+            @change="handleInputChange(field, formData[field.fieldCode])"
+          />
+
+          <!-- 富文本/文本域 -->
+          <el-input
+            v-else-if="field.componentType === 'richText'"
+            v-model="formData[field.fieldCode]"
+            type="textarea"
+            :rows="4"
+            :placeholder="getPlaceholder(field)"
+            :disabled="disabled"
+            :readonly="isFieldReadonly(field)"
+            @input="handleInputChange(field, formData[field.fieldCode])"
+          />
+
+          <!-- 默认输入框 -->
+          <el-input
+            v-else
+            v-model="formData[field.fieldCode]"
+            :placeholder="getPlaceholder(field)"
+            :disabled="disabled"
+            :readonly="isFieldReadonly(field)"
+            clearable
+            @input="handleInputChange(field, formData[field.fieldCode])"
+          />
+
+          <!-- 字段说明 -->
           <div v-if="field.fieldDesc" class="field-desc">
             {{ field.fieldDesc }}
           </div>
+
+          <!-- 数据来源提示 -->
           <div v-if="field.dataSource && field.dataSource.type !== 'userInput'" class="data-source-tip">
             <el-tag size="small" type="info">
               数据来源：

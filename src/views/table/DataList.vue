@@ -1,33 +1,32 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Plus, Edit, Delete, View } from '@element-plus/icons-vue'
 import { getTableDetail, getDataList, deleteData } from '@/api/tableMock'
-import { TableConfig, TableField, QueryField, QueryType } from '@/types/tableTypes'
 
 const router = useRouter()
 const route = useRoute()
 
 // 表配置
-const tableConfig = ref<TableConfig | null>(null)
+const tableConfig = ref(null)
 const loading = ref(false)
 
 // 数据列表
-const dataList = ref<any[]>([])
+const dataList = ref([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = ref(10)
 
 // 查询条件
-const searchConditions = ref<Record<string, any>>({})
+const searchConditions = ref({})
 
 // 获取表ID
-const tableId = computed(() => route.query.tableId as string)
+const tableId = computed(() => route.query.tableId)
 
 // 页面标题
 const pageTitle = computed(() => {
-  return tableConfig.value?.info.tableName || '数据列表'
+  return tableConfig.value?.info?.tableName || '数据列表'
 })
 
 // 获取启用的查询字段
@@ -38,7 +37,7 @@ const enabledQueryFields = computed(() => {
     .filter(qf => qf.enabled)
     .sort((a, b) => a.sort - b.sort)
     .map(qf => {
-      const field = tableConfig.value!.fields.find(f => f.id === qf.fieldId)
+      const field = tableConfig.value.fields.find(f => f.id === qf.fieldId)
       return {
         ...qf,
         field
@@ -65,8 +64,8 @@ const listDisplayFields = computed(() => {
 })
 
 // 获取查询类型标签
-const getQueryTypeLabel = (type: QueryType) => {
-  const labels: Record<QueryType, string> = {
+const getQueryTypeLabel = (type) => {
+  const labels = {
     equal: '等于',
     like: '模糊匹配',
     range: '范围',
@@ -147,17 +146,17 @@ const handleAdd = () => {
 }
 
 // 查看数据
-const handleView = (row: any) => {
+const handleView = (row) => {
   router.push(`/table/data/edit?tableId=${tableId.value}&id=${row.id}&view=true`)
 }
 
 // 编辑数据
-const handleEdit = (row: any) => {
+const handleEdit = (row) => {
   router.push(`/table/data/edit?tableId=${tableId.value}&id=${row.id}`)
 }
 
 // 删除数据
-const handleDelete = async (row: any) => {
+const handleDelete = async (row) => {
   try {
     await ElMessageBox.confirm(
       '确定要删除这条数据吗？此操作不可恢复。',
@@ -182,13 +181,13 @@ const handleDelete = async (row: any) => {
 }
 
 // 格式化时间
-const formatTime = (time: string) => {
+const formatTime = (time) => {
   if (!time) return '-'
   return new Date(time).toLocaleString('zh-CN')
 }
 
 // 获取单元格值
-const getCellValue = (row: any, field: TableField) => {
+const getCellValue = (row, field) => {
   const value = row.data?.[field.fieldCode]
   if (value === undefined || value === null || value === '') {
     return '-'
@@ -202,12 +201,12 @@ const handleBack = () => {
 }
 
 // 分页变化
-const handlePageChange = (newPage: number) => {
+const handlePageChange = (newPage) => {
   page.value = newPage
   loadDataList()
 }
 
-const handlePageSizeChange = (newSize: number) => {
+const handlePageSizeChange = (newSize) => {
   pageSize.value = newSize
   page.value = 1
   loadDataList()

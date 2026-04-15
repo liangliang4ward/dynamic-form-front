@@ -1,12 +1,5 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import {
-  TableField,
-  DataSourceType,
-  DataSourceConfig,
-  FieldDisplayConfig,
-  LoginInfoField
-} from '@/types/tableTypes'
 
 const props = defineProps({
   modelValue: {
@@ -23,27 +16,27 @@ const emit = defineEmits(['update:modelValue'])
 
 // 数据来源类型选项
 const dataSourceTypeOptions = [
-  { label: '用户输入', value: 'userInput' as DataSourceType, desc: '用户在表单中手动输入' },
-  { label: '登录信息', value: 'loginInfo' as DataSourceType, desc: '从当前登录用户信息中获取' },
-  { label: '系统默认', value: 'systemDefault' as DataSourceType, desc: '使用系统默认值' },
-  { label: '字典', value: 'dict' as DataSourceType, desc: '从数据字典中获取选项' },
-  { label: '自定义', value: 'custom' as DataSourceType, desc: '使用自定义表达式或值' }
+  { label: '用户输入', value: 'userInput', desc: '用户在表单中手动输入' },
+  { label: '登录信息', value: 'loginInfo', desc: '从当前登录用户信息中获取' },
+  { label: '系统默认', value: 'systemDefault', desc: '使用系统默认值' },
+  { label: '字典', value: 'dict', desc: '从数据字典中获取选项' },
+  { label: '自定义', value: 'custom', desc: '使用自定义表达式或值' }
 ]
 
 // 登录信息字段选项
 const loginInfoFieldOptions = [
-  { label: '用户ID', value: 'userId' as LoginInfoField },
-  { label: '用户名', value: 'userName' as LoginInfoField },
-  { label: '部门ID', value: 'deptId' as LoginInfoField },
-  { label: '部门名称', value: 'deptName' as LoginInfoField },
-  { label: '角色ID', value: 'roleId' as LoginInfoField },
-  { label: '角色名称', value: 'roleName' as LoginInfoField },
-  { label: '租户ID', value: 'tenantId' as LoginInfoField },
-  { label: '组织ID', value: 'orgId' as LoginInfoField }
+  { label: '用户ID', value: 'userId' },
+  { label: '用户名', value: 'userName' },
+  { label: '部门ID', value: 'deptId' },
+  { label: '部门名称', value: 'deptName' },
+  { label: '角色ID', value: 'roleId' },
+  { label: '角色名称', value: 'roleName' },
+  { label: '租户ID', value: 'tenantId' },
+  { label: '组织ID', value: 'orgId' }
 ]
 
 // 当前编辑的字段副本
-const localField = ref<TableField>({ ...props.modelValue })
+const localField = ref({ ...props.modelValue })
 
 // 监听外部值变化
 watch(
@@ -58,7 +51,7 @@ watch(
 const ensureDataSource = () => {
   if (!localField.value.dataSource) {
     localField.value.dataSource = {
-      type: 'userInput' as DataSourceType
+      type: 'userInput'
     }
   }
 }
@@ -82,16 +75,16 @@ const ensureDisplayConfig = () => {
 const dataSourceType = computed({
   get: () => {
     ensureDataSource()
-    return localField.value.dataSource!.type
+    return localField.value.dataSource.type
   },
-  set: (val: DataSourceType) => {
+  set: (val) => {
     ensureDataSource()
-    localField.value.dataSource!.type = val
+    localField.value.dataSource.type = val
     // 重置其他字段
-    localField.value.dataSource!.loginInfoField = undefined
-    localField.value.dataSource!.dictCode = undefined
-    localField.value.dataSource!.customValue = undefined
-    localField.value.dataSource!.expression = undefined
+    localField.value.dataSource.loginInfoField = undefined
+    localField.value.dataSource.dictCode = undefined
+    localField.value.dataSource.customValue = undefined
+    localField.value.dataSource.expression = undefined
     updateField()
   }
 })
@@ -100,11 +93,11 @@ const dataSourceType = computed({
 const loginInfoField = computed({
   get: () => {
     ensureDataSource()
-    return localField.value.dataSource!.loginInfoField
+    return localField.value.dataSource.loginInfoField
   },
-  set: (val: LoginInfoField | undefined) => {
+  set: (val) => {
     ensureDataSource()
-    localField.value.dataSource!.loginInfoField = val
+    localField.value.dataSource.loginInfoField = val
     updateField()
   }
 })
@@ -113,11 +106,11 @@ const loginInfoField = computed({
 const dictCode = computed({
   get: () => {
     ensureDataSource()
-    return localField.value.dataSource!.dictCode
+    return localField.value.dataSource.dictCode
   },
-  set: (val: string | undefined) => {
+  set: (val) => {
     ensureDataSource()
-    localField.value.dataSource!.dictCode = val
+    localField.value.dataSource.dictCode = val
     updateField()
   }
 })
@@ -126,11 +119,11 @@ const dictCode = computed({
 const customValue = computed({
   get: () => {
     ensureDataSource()
-    return localField.value.dataSource!.customValue
+    return localField.value.dataSource.customValue
   },
-  set: (val: string | undefined) => {
+  set: (val) => {
     ensureDataSource()
-    localField.value.dataSource!.customValue = val
+    localField.value.dataSource.customValue = val
     updateField()
   }
 })
@@ -139,11 +132,11 @@ const customValue = computed({
 const showInList = computed({
   get: () => {
     ensureDisplayConfig()
-    return localField.value.displayConfig!.showInList
+    return localField.value.displayConfig.showInList
   },
-  set: (val: boolean) => {
+  set: (val) => {
     ensureDisplayConfig()
-    localField.value.displayConfig!.showInList = val
+    localField.value.displayConfig.showInList = val
     updateField()
   }
 })
@@ -152,11 +145,11 @@ const showInList = computed({
 const showInForm = computed({
   get: () => {
     ensureDisplayConfig()
-    return localField.value.displayConfig!.showInForm
+    return localField.value.displayConfig.showInForm
   },
-  set: (val: boolean) => {
+  set: (val) => {
     ensureDisplayConfig()
-    localField.value.displayConfig!.showInForm = val
+    localField.value.displayConfig.showInForm = val
     updateField()
   }
 })
@@ -165,11 +158,11 @@ const showInForm = computed({
 const showInDetail = computed({
   get: () => {
     ensureDisplayConfig()
-    return localField.value.displayConfig!.showInDetail
+    return localField.value.displayConfig.showInDetail
   },
-  set: (val: boolean) => {
+  set: (val) => {
     ensureDisplayConfig()
-    localField.value.displayConfig!.showInDetail = val
+    localField.value.displayConfig.showInDetail = val
     updateField()
   }
 })
@@ -178,11 +171,11 @@ const showInDetail = computed({
 const listWidth = computed({
   get: () => {
     ensureDisplayConfig()
-    return localField.value.displayConfig!.listWidth
+    return localField.value.displayConfig.listWidth
   },
-  set: (val: number | undefined) => {
+  set: (val) => {
     ensureDisplayConfig()
-    localField.value.displayConfig!.listWidth = val
+    localField.value.displayConfig.listWidth = val
     updateField()
   }
 })
@@ -191,11 +184,11 @@ const listWidth = computed({
 const listSort = computed({
   get: () => {
     ensureDisplayConfig()
-    return localField.value.displayConfig!.listSort
+    return localField.value.displayConfig.listSort
   },
-  set: (val: number) => {
+  set: (val) => {
     ensureDisplayConfig()
-    localField.value.displayConfig!.listSort = val
+    localField.value.displayConfig.listSort = val
     updateField()
   }
 })
@@ -204,11 +197,11 @@ const listSort = computed({
 const formSort = computed({
   get: () => {
     ensureDisplayConfig()
-    return localField.value.displayConfig!.formSort
+    return localField.value.displayConfig.formSort
   },
-  set: (val: number) => {
+  set: (val) => {
     ensureDisplayConfig()
-    localField.value.displayConfig!.formSort = val
+    localField.value.displayConfig.formSort = val
     updateField()
   }
 })
@@ -217,11 +210,11 @@ const formSort = computed({
 const readonly = computed({
   get: () => {
     ensureDisplayConfig()
-    return localField.value.displayConfig!.readonly
+    return localField.value.displayConfig.readonly
   },
-  set: (val: boolean) => {
+  set: (val) => {
     ensureDisplayConfig()
-    localField.value.displayConfig!.readonly = val
+    localField.value.displayConfig.readonly = val
     updateField()
   }
 })
@@ -230,11 +223,11 @@ const readonly = computed({
 const hidden = computed({
   get: () => {
     ensureDisplayConfig()
-    return localField.value.displayConfig!.hidden
+    return localField.value.displayConfig.hidden
   },
-  set: (val: boolean) => {
+  set: (val) => {
     ensureDisplayConfig()
-    localField.value.displayConfig!.hidden = val
+    localField.value.displayConfig.hidden = val
     updateField()
   }
 })
@@ -243,11 +236,11 @@ const hidden = computed({
 const placeholder = computed({
   get: () => {
     ensureDisplayConfig()
-    return localField.value.displayConfig!.placeholder
+    return localField.value.displayConfig.placeholder
   },
-  set: (val: string | undefined) => {
+  set: (val) => {
     ensureDisplayConfig()
-    localField.value.displayConfig!.placeholder = val
+    localField.value.displayConfig.placeholder = val
     updateField()
   }
 })
@@ -258,7 +251,7 @@ const updateField = () => {
 }
 
 // 获取数据来源描述
-const getDataSourceDesc = (type: DataSourceType) => {
+const getDataSourceDesc = (type) => {
   const option = dataSourceTypeOptions.find(o => o.value === type)
   return option?.desc || ''
 }

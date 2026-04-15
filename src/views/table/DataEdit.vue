@@ -3,8 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import { getTableDetail, getDataDetail, saveData, createNewDataRecord } from '@/api/tableMock'
-import { TableConfig, DataRecord } from '@/types/tableTypes'
+import { getTableDetail, getDataDetail, saveData } from '@/api/tableMock'
 import DynamicForm from '@/components/table/DynamicForm.vue'
 
 const router = useRouter()
@@ -14,22 +13,22 @@ const route = useRoute()
 const dynamicFormRef = ref()
 
 // 表配置
-const tableConfig = ref<TableConfig | null>(null)
+const tableConfig = ref(null)
 const loading = ref(false)
 const saving = ref(false)
 
 // 表单数据
-const formData = ref<Record<string, any>>({})
+const formData = ref({})
 
 // 获取参数
-const tableId = computed(() => route.query.tableId as string)
-const dataId = computed(() => route.query.id as string)
+const tableId = computed(() => route.query.tableId)
+const dataId = computed(() => route.query.id)
 const isViewMode = computed(() => route.query.view === 'true')
 const isEditMode = computed(() => !!dataId.value)
 
 // 页面标题
 const pageTitle = computed(() => {
-  const tableName = tableConfig.value?.info.tableName || ''
+  const tableName = tableConfig.value?.info?.tableName || ''
   if (isViewMode.value) return `${tableName} - 查看数据`
   if (isEditMode.value) return `${tableName} - 编辑数据`
   return `${tableName} - 新增数据`
@@ -96,7 +95,7 @@ const handleSave = async () => {
 
   saving.value = true
   try {
-    const record: DataRecord = {
+    const record = {
       id: dataId.value || '',
       tableId: tableId.value,
       data: { ...formData.value },
