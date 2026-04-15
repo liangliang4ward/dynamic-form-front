@@ -13,6 +13,16 @@ const routes = [
     component: () => import('@/views/index.vue')
   },
   {
+    path: '/table/list',
+    name: 'TableList',
+    component: () => import('@/views/table/TableList.vue')
+  },
+  {
+    path: '/table/edit',
+    name: 'TableEdit',
+    component: () => import('@/views/table/TableEdit.vue')
+  },
+  {
     path: '/debug-token',
     name: 'DebugToken',
     component: () => import('@/views/DebugToken.vue')

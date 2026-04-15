@@ -32,6 +32,10 @@ declare module 'vue' {
     ElTree: typeof import('element-plus/es')['ElTree']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    TableBaseForm: typeof import('./components/table/TableBaseForm.vue')['default']
+    TableFieldList: typeof import('./components/table/TableFieldList.vue')['default']
+    TableGroupList: typeof import('./components/table/TableGroupList.vue')['default']
+    TableIndexList: typeof import('./components/table/TableIndexList.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

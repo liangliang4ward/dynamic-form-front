@@ -72,7 +72,6 @@ const handleCheckPermission = () => {
 
 <template>
   <div class="page-container">
-
     <ElCard class="box-card" style="margin-top: 20px">
       <template #header>
         <div class="card-header">
@@ -82,7 +81,8 @@ const handleCheckPermission = () => {
           </ElButton>
         </div>
       </template>
-      <div style="display: flex; gap: 10px">
+      <div style="display: flex; gap: 10px; flex-wrap: wrap">
+        <ElButton type="primary" @click="$router.push('/table/list')"> 📋 表配置管理 </ElButton>
         <!-- <ElButton type="primary" @click="$router.push('/role')">角色列表</ElButton> -->
       </div>
     </ElCard>
