@@ -122,6 +122,15 @@ const formattedJson = computed(() => {
   return JSON.stringify(tableConfig.value, null, 2)
 })
 
+const handleCopyJson = async () => {
+  try {
+    await navigator.clipboard.writeText(formattedJson.value)
+    ElMessage.success('已复制到剪贴板')
+  } catch {
+    ElMessage.error('复制失败')
+  }
+}
+
 const handleBack = () => {
   router.push('/table/list')
 }
@@ -240,15 +249,7 @@ onBeforeUnmount(() => {
       </div>
       <template #footer>
         <el-button @click="jsonPreviewVisible = false">关闭</el-button>
-        <el-button
-          type="primary"
-          @click="
-            navigator.clipboard.writeText(formattedJson)
-            ElMessage.success('已复制到剪贴板')
-          "
-        >
-          复制
-        </el-button>
+        <el-button type="primary" @click="handleCopyJson"> 复制 </el-button>
       </template>
     </el-dialog>
   </div>
