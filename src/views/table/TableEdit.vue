@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, View } from '@element-plus/icons-vue'
 import { getTableDetail, saveTable, createNewTableConfig } from '@/api/tableMock'
 import { validateTableConfig } from '@/utils/tableValidator'
 import TableBaseForm from '@/components/table/TableBaseForm.vue'
@@ -168,6 +168,15 @@ const handlePreview = () => {
   jsonPreviewVisible.value = true
 }
 
+// 数据预览 - 跳转到数据列表页面
+const handleDataPreview = () => {
+  if (!tableConfig.value.id) {
+    ElMessage.warning('请先保存表配置后再预览数据')
+    return
+  }
+  router.push(`/table/data/list?tableId=${tableConfig.value.id}`)
+}
+
 const formattedJson = computed(() => {
   return JSON.stringify(tableConfig.value, null, 2)
 })
@@ -252,6 +261,9 @@ onBeforeUnmount(() => {
           <div class="header-right" v-if="!isViewMode">
             <el-button @click="handleReset">重置</el-button>
             <el-button @click="handlePreview">预览配置</el-button>
+            <el-button type="success" :icon="View" @click="handleDataPreview">
+              数据预览
+            </el-button>
             <el-button type="primary" :loading="saving" @click="handleSave"> 保存 </el-button>
           </div>
         </div>

@@ -2,8 +2,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Plus, Edit, Delete, View, MagicStick, Refresh } from '@element-plus/icons-vue'
+import { ArrowLeft, Plus, Edit, Delete, View, MagicStick, Refresh, Search } from '@element-plus/icons-vue'
 import { getTableDetail, getDataList, deleteData, generateMockData } from '@/api/tableMock'
+import AdvancedQueryDialog from '@/components/table/AdvancedQueryDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -21,6 +22,10 @@ const pageSize = ref(10)
 
 // 查询条件
 const searchConditions = ref({})
+
+// 高级查询
+const advancedQueryDialogVisible = ref(false)
+const currentAdvancedConditions = ref(null)
 
 // 获取表ID
 const tableId = computed(() => route.query.tableId)
@@ -137,8 +142,33 @@ const handleSearch = () => {
 // 重置搜索
 const handleReset = () => {
   searchConditions.value = {}
+  currentAdvancedConditions.value = null
   page.value = 1
   loadDataList()
+}
+
+// 打开高级查询
+const openAdvancedQuery = () => {
+  advancedQueryDialogVisible.value = true
+}
+
+// 执行高级查询
+const handleAdvancedQuery = (conditionGroup) => {
+  currentAdvancedConditions.value = conditionGroup
+  // 转换高级查询条件为简单查询条件（临时实现，后续可以在API中完善）
+  // 这里先提取第一层条件
+  const conditions = {}
+  if (conditionGroup && conditionGroup.conditions) {
+    conditionGroup.conditions.forEach(c => {
+      if (c.enabled && c.fieldCode && c.value) {
+        conditions[c.fieldCode] = c.value
+      }
+    })
+  }
+  searchConditions.value = conditions
+  page.value = 1
+  loadDataList()
+  ElMessage.success('查询完成')
 }
 
 // 刷新
@@ -312,7 +342,7 @@ onMounted(() => {
           :label="queryField.field?.fieldName"
         >
           <el-input
-            v-model="searchConditions[queryField.field!.fieldCode]"
+            v-model="searchConditions[queryField.field.fieldCode]"
             :placeholder="`请输入${getQueryTypeLabel(queryField.queryType)}`"
             clearable
             @keyup.enter="handleSearch"
@@ -322,8 +352,30 @@ onMounted(() => {
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
+          <el-button type="success" :icon="Search" @click="openAdvancedQuery">
+            高级查询
+          </el-button>
         </el-form-item>
       </el-form>
+
+      <!-- 高级查询条件提示 -->
+      <el-alert
+        v-if="currentAdvancedConditions"
+        type="success"
+        :closable="false"
+        show-icon
+        style="margin-bottom: 16px"
+      >
+        <template #title>
+          已应用高级查询条件
+          <el-button type="primary" link size="small" @click="openAdvancedQuery">
+            查看/修改条件
+          </el-button>
+          <el-button type="info" link size="small" @click="handleReset">
+            清除条件
+          </el-button>
+        </template>
+      </el-alert>
 
       <!-- 空数据提示 -->
       <el-empty
@@ -417,6 +469,15 @@ onMounted(() => {
         </div>
       </template>
     </el-card>
+
+    <!-- 高级查询对话框 -->
+    <AdvancedQueryDialog
+      v-model="advancedQueryDialogVisible"
+      :tableId="tableId"
+      :fields="tableConfig?.fields || []"
+      :currentConditionGroup="currentAdvancedConditions"
+      @query="handleAdvancedQuery"
+    />
   </div>
 </template>
 
