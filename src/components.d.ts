@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AdvancedQueryDialog: typeof import('./components/table/AdvancedQueryDialog.vue')['default']
     DynamicForm: typeof import('./components/table/DynamicForm.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElButton: typeof import('element-plus/es')['ElButton']
