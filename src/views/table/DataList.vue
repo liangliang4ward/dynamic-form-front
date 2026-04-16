@@ -2,8 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Plus, Edit, Delete, View } from '@element-plus/icons-vue'
-import { getTableDetail, getDataList, deleteData } from '@/api/tableMock'
+import { ArrowLeft, Plus, Edit, Delete, View, MagicStick, Refresh } from '@element-plus/icons-vue'
+import { getTableDetail, getDataList, deleteData, generateMockData } from '@/api/tableMock'
 
 const router = useRouter()
 const route = useRoute()
@@ -11,6 +11,7 @@ const route = useRoute()
 // 表配置
 const tableConfig = ref(null)
 const loading = ref(false)
+const generating = ref(false)
 
 // 数据列表
 const dataList = ref([])
@@ -140,9 +141,57 @@ const handleReset = () => {
   loadDataList()
 }
 
+// 刷新
+const handleRefresh = () => {
+  loadDataList()
+}
+
 // 新增数据
 const handleAdd = () => {
   router.push(`/table/data/edit?tableId=${tableId.value}`)
+}
+
+// 生成Mock数据
+const handleGenerateMockData = async () => {
+  if (!tableConfig.value) {
+    ElMessage.warning('表配置不存在')
+    return
+  }
+
+  if (!tableConfig.value.fields || tableConfig.value.fields.length === 0) {
+    ElMessage.warning('该表尚未配置字段，请先配置字段')
+    return
+  }
+
+  try {
+    const { value: count } = await ElMessageBox.prompt('请输入要生成的数据条数', '生成Mock数据', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputPattern: /^\d+$/,
+      inputErrorMessage: '请输入有效的数字',
+      inputValue: '20'
+    })
+
+    const numCount = parseInt(count)
+    if (numCount <= 0 || numCount > 1000) {
+      ElMessage.warning('请输入1-1000之间的数字')
+      return
+    }
+
+    generating.value = true
+    const result = await generateMockData(tableId.value, numCount, tableConfig.value)
+    
+    if (result.success) {
+      ElMessage.success(result.message)
+      loadDataList()
+    } else {
+      ElMessage.error(result.message)
+    }
+  } catch (error) {
+    // 用户取消
+  } finally {
+    generating.value = false
+  }
 }
 
 // 查看数据
@@ -228,8 +277,22 @@ onMounted(() => {
               返回
             </el-button>
             <span class="title">{{ pageTitle }} - 数据列表</span>
+            <el-tag v-if="total > 0" type="info" size="large">
+              共 {{ total }} 条数据
+            </el-tag>
           </div>
           <div class="header-right">
+            <el-button :icon="Refresh" @click="handleRefresh" :disabled="loading">
+              刷新
+            </el-button>
+            <el-button
+              type="warning"
+              :icon="MagicStick"
+              @click="handleGenerateMockData"
+              :loading="generating"
+            >
+              生成Mock数据
+            </el-button>
             <el-button type="primary" :icon="Plus" @click="handleAdd">
               新增数据
             </el-button>
@@ -262,84 +325,97 @@ onMounted(() => {
         </el-form-item>
       </el-form>
 
-      <!-- 数据表格 -->
-      <el-table
-        :data="dataList"
-        border
-        stripe
-        style="width: 100%"
-        empty-text="暂无数据"
+      <!-- 空数据提示 -->
+      <el-empty
+        v-if="dataList.length === 0 && !loading"
+        description="暂无数据"
+        class="empty-data"
       >
-        <el-table-column
-          v-for="field in listDisplayFields"
-          :key="field.id"
-          :prop="`data.${field.fieldCode}`"
-          :label="field.fieldName"
-          :min-width="field.displayConfig?.listWidth || 120"
-          show-overflow-tooltip
+        <el-button type="primary" :icon="MagicStick" @click="handleGenerateMockData">
+          生成Mock数据
+        </el-button>
+      </el-empty>
+
+      <!-- 数据表格 -->
+      <template v-else>
+        <el-table
+          :data="dataList"
+          border
+          stripe
+          style="width: 100%"
+          empty-text="暂无数据"
         >
-          <template #default="{ row }">
-            {{ getCellValue(row, field) }}
-          </template>
-        </el-table-column>
+          <el-table-column
+            v-for="field in listDisplayFields"
+            :key="field.id"
+            :prop="`data.${field.fieldCode}`"
+            :label="field.fieldName"
+            :min-width="field.displayConfig?.listWidth || 120"
+            show-overflow-tooltip
+          >
+            <template #default="{ row }">
+              {{ getCellValue(row, field) }}
+            </template>
+          </el-table-column>
 
-        <el-table-column label="创建时间" width="180">
-          <template #default="{ row }">
-            {{ formatTime(row.createTime) }}
-          </template>
-        </el-table-column>
+          <el-table-column label="创建时间" width="180">
+            <template #default="{ row }">
+              {{ formatTime(row.createTime) }}
+            </template>
+          </el-table-column>
 
-        <el-table-column label="更新时间" width="180">
-          <template #default="{ row }">
-            {{ formatTime(row.updateTime) }}
-          </template>
-        </el-table-column>
+          <el-table-column label="更新时间" width="180">
+            <template #default="{ row }">
+              {{ formatTime(row.updateTime) }}
+            </template>
+          </el-table-column>
 
-        <el-table-column label="操作" width="200" fixed="right" align="center">
-          <template #default="{ row }">
-            <el-button
-              type="primary"
-              link
-              size="small"
-              :icon="View"
-              @click="handleView(row)"
-            >
-              查看
-            </el-button>
-            <el-button
-              type="primary"
-              link
-              size="small"
-              :icon="Edit"
-              @click="handleEdit(row)"
-            >
-              编辑
-            </el-button>
-            <el-button
-              type="danger"
-              link
-              size="small"
-              :icon="Delete"
-              @click="handleDelete(row)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+          <el-table-column label="操作" width="200" fixed="right" align="center">
+            <template #default="{ row }">
+              <el-button
+                type="primary"
+                link
+                size="small"
+                :icon="View"
+                @click="handleView(row)"
+              >
+                查看
+              </el-button>
+              <el-button
+                type="primary"
+                link
+                size="small"
+                :icon="Edit"
+                @click="handleEdit(row)"
+              >
+                编辑
+              </el-button>
+              <el-button
+                type="danger"
+                link
+                size="small"
+                :icon="Delete"
+                @click="handleDelete(row)"
+              >
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
 
-      <!-- 分页 -->
-      <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="page"
-          v-model:page-size="pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handlePageSizeChange"
-          @current-change="handlePageChange"
-        />
-      </div>
+        <!-- 分页 -->
+        <div class="pagination-wrapper">
+          <el-pagination
+            v-model:current-page="page"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handlePageSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
+      </template>
     </el-card>
   </div>
 </template>
@@ -366,8 +442,20 @@ onMounted(() => {
   font-weight: 600;
 }
 
+.header-right {
+  display: flex;
+  gap: 8px;
+}
+
 .search-form {
   margin-bottom: 20px;
+  padding: 16px;
+  background: #f5f7fa;
+  border-radius: 8px;
+}
+
+.empty-data {
+  padding: 40px 0;
 }
 
 .pagination-wrapper {

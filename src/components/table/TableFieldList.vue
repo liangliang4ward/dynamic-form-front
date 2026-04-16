@@ -93,6 +93,12 @@ const createDefaultField = () => {
       formSort: props.modelValue.length,
       readonly: false,
       hidden: false
+    },
+    queryConfig: {
+      id: '',
+      enabled: false,
+      queryType: 'equal',
+      sort: props.modelValue.length
     }
   }
 }
@@ -551,27 +557,40 @@ const getDisplaySummary = (config) => {
     <!-- 高级设置弹窗 -->
     <el-dialog
       v-model="advancedSettingsVisible"
-      title="字段高级设置"
-      width="700px"
+      width="800px"
       :close-on-click-modal="false"
       destroy-on-close
+      class="advanced-settings-dialog"
     >
+      <template #header>
+        <div class="dialog-header">
+          <span class="dialog-icon">⚙️</span>
+          <div class="dialog-title-info">
+            <span class="dialog-title">字段高级设置</span>
+            <span class="dialog-subtitle">
+              {{ currentEditingField?.fieldName || '未命名字段' }}
+              <span v-if="currentEditingField?.fieldCode">({{ currentEditingField.fieldCode }})</span>
+            </span>
+          </div>
+        </div>
+      </template>
+      
       <div v-if="currentEditingField" class="advanced-settings-content">
-        <el-alert
-          :title="`当前字段：${currentEditingField.fieldName || currentEditingField.fieldCode} (${currentEditingField.fieldCode})`"
-          type="info"
-          :closable="false"
-          show-icon
-          style="margin-bottom: 16px"
-        />
         <TableFieldAdvancedSettings
           v-model="currentEditingField"
           :disabled="disabled"
         />
       </div>
+      
       <template #footer>
-        <el-button @click="closeAdvancedSettings">取消</el-button>
-        <el-button type="primary" @click="saveAdvancedSettings">保存</el-button>
+        <div class="dialog-footer">
+          <el-button size="large" @click="closeAdvancedSettings">
+            <span>取消</span>
+          </el-button>
+          <el-button type="primary" size="large" @click="saveAdvancedSettings">
+            <span>保存设置</span>
+          </el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -620,7 +639,73 @@ const getDisplaySummary = (config) => {
 }
 
 .advanced-settings-content {
-  max-height: 500px;
+  max-height: 550px;
   overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* 弹窗样式 */
+:deep(.advanced-settings-dialog) {
+  .el-dialog__header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #ebeef5;
+    margin-right: 0;
+  }
+  
+  .el-dialog__body {
+    padding: 24px;
+  }
+  
+  .el-dialog__footer {
+    padding: 16px 24px;
+    border-top: 1px solid #ebeef5;
+  }
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dialog-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
+  border-radius: 12px;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+.dialog-title-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dialog-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.dialog-subtitle {
+  font-size: 13px;
+  color: #909399;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.dialog-footer .el-button {
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-weight: 500;
 }
 </style>

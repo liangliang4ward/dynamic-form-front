@@ -56,17 +56,25 @@ watch(
 // 监听字段变化，同步更新查询字段
 watch(
   () => tableConfig.value.fields,
-  (newFields, oldFields) => {
-    if (!oldFields || oldFields.length === 0) return
-
-    const newFieldIds = newFields.map(f => f.id)
-    const removedFieldIds = oldFields.map(f => f.id).filter(id => !newFieldIds.includes(id))
-
-    if (removedFieldIds.length > 0) {
-      tableConfig.value.queryFields = tableConfig.value.queryFields.filter(
-        qf => !removedFieldIds.includes(qf.fieldId)
-      )
-    }
+  (newFields) => {
+    // 从字段的 queryConfig 同步到 queryFields
+    const newQueryFields = []
+    newFields.forEach(field => {
+      if (field.queryConfig && field.queryConfig.enabled) {
+        newQueryFields.push({
+          id: field.queryConfig.id || `query-${field.id}`,
+          fieldId: field.id,
+          queryType: field.queryConfig.queryType || 'equal',
+          sort: field.queryConfig.sort ?? field.sort,
+          enabled: true
+        })
+      }
+    })
+    
+    // 按 sort 排序
+    newQueryFields.sort((a, b) => a.sort - b.sort)
+    
+    tableConfig.value.queryFields = newQueryFields
   },
   { deep: true }
 )
