@@ -3,7 +3,32 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Plus, Share } from '@element-plus/icons-vue'
 import { generateId, getQueryTemplatesByTableId, saveQueryTemplate, deleteQueryTemplate, setDefaultQueryTemplate } from '@/utils/tableStorage'
-import { LogicalOperator, QueryOperator } from '@/types/tableTypes'
+
+// 逻辑运算符常量（供模板使用）
+const LOGICAL_OPERATORS = {
+  AND: 'AND',
+  OR: 'OR'
+}
+
+// 查询操作符常量（供模板使用）
+const QUERY_OPERATORS = {
+  EQUAL: 'equal',
+  NOT_EQUAL: 'notEqual',
+  GREATER: 'greater',
+  LESS: 'less',
+  GREATER_EQUAL: 'greaterEqual',
+  LESS_EQUAL: 'lessEqual',
+  LIKE: 'like',
+  NOT_LIKE: 'notLike',
+  LEFT_LIKE: 'leftLike',
+  RIGHT_LIKE: 'rightLike',
+  IN: 'in',
+  NOT_IN: 'notIn',
+  IS_NULL: 'isNull',
+  IS_NOT_NULL: 'isNotNull',
+  BETWEEN: 'between',
+  NOT_BETWEEN: 'notBetween'
+}
 
 // 定义 Props
 const props = defineProps({
@@ -71,43 +96,43 @@ const queryableFields = computed(() => {
 
 // 查询操作符选项
 const operatorOptions = [
-  { label: '等于', value: QueryOperator.EQUAL, desc: '精确匹配' },
-  { label: '不等于', value: QueryOperator.NOT_EQUAL, desc: '排除匹配' },
-  { label: '大于', value: QueryOperator.GREATER, desc: '数值/日期比较' },
-  { label: '小于', value: QueryOperator.LESS, desc: '数值/日期比较' },
-  { label: '大于等于', value: QueryOperator.GREATER_EQUAL, desc: '数值/日期比较' },
-  { label: '小于等于', value: QueryOperator.LESS_EQUAL, desc: '数值/日期比较' },
-  { label: '包含', value: QueryOperator.LIKE, desc: '模糊查询' },
-  { label: '不包含', value: QueryOperator.NOT_LIKE, desc: '排除模糊' },
-  { label: '开头是', value: QueryOperator.LEFT_LIKE, desc: '左匹配' },
-  { label: '结尾是', value: QueryOperator.RIGHT_LIKE, desc: '右匹配' },
-  { label: '在范围内', value: QueryOperator.IN, desc: '多值匹配' },
-  { label: '不在范围内', value: QueryOperator.NOT_IN, desc: '排除多值' },
-  { label: '为空', value: QueryOperator.IS_NULL, desc: 'NULL检查' },
-  { label: '不为空', value: QueryOperator.IS_NOT_NULL, desc: '非NULL检查' },
-  { label: '介于', value: QueryOperator.BETWEEN, desc: '区间查询' },
-  { label: '不介于', value: QueryOperator.NOT_BETWEEN, desc: '排除区间' }
+  { label: '等于', value: QUERY_OPERATORS.EQUAL, desc: '精确匹配' },
+  { label: '不等于', value: QUERY_OPERATORS.NOT_EQUAL, desc: '排除匹配' },
+  { label: '大于', value: QUERY_OPERATORS.GREATER, desc: '数值/日期比较' },
+  { label: '小于', value: QUERY_OPERATORS.LESS, desc: '数值/日期比较' },
+  { label: '大于等于', value: QUERY_OPERATORS.GREATER_EQUAL, desc: '数值/日期比较' },
+  { label: '小于等于', value: QUERY_OPERATORS.LESS_EQUAL, desc: '数值/日期比较' },
+  { label: '包含', value: QUERY_OPERATORS.LIKE, desc: '模糊查询' },
+  { label: '不包含', value: QUERY_OPERATORS.NOT_LIKE, desc: '排除模糊' },
+  { label: '开头是', value: QUERY_OPERATORS.LEFT_LIKE, desc: '左匹配' },
+  { label: '结尾是', value: QUERY_OPERATORS.RIGHT_LIKE, desc: '右匹配' },
+  { label: '在范围内', value: QUERY_OPERATORS.IN, desc: '多值匹配' },
+  { label: '不在范围内', value: QUERY_OPERATORS.NOT_IN, desc: '排除多值' },
+  { label: '为空', value: QUERY_OPERATORS.IS_NULL, desc: 'NULL检查' },
+  { label: '不为空', value: QUERY_OPERATORS.IS_NOT_NULL, desc: '非NULL检查' },
+  { label: '介于', value: QUERY_OPERATORS.BETWEEN, desc: '区间查询' },
+  { label: '不介于', value: QUERY_OPERATORS.NOT_BETWEEN, desc: '排除区间' }
 ]
 
 // 检查操作符是否需要值
 const operatorRequiresValue = (operator) => {
-  return ![QueryOperator.IS_NULL, QueryOperator.IS_NOT_NULL].includes(operator)
+  return ![QUERY_OPERATORS.IS_NULL, QUERY_OPERATORS.IS_NOT_NULL].includes(operator)
 }
 
 // 检查操作符是否需要第二个值（BETWEEN）
 const operatorRequiresSecondValue = (operator) => {
-  return [QueryOperator.BETWEEN, QueryOperator.NOT_BETWEEN].includes(operator)
+  return [QUERY_OPERATORS.BETWEEN, QUERY_OPERATORS.NOT_BETWEEN].includes(operator)
 }
 
 // 检查操作符是否需要多值（IN）
 const operatorRequiresMultiValue = (operator) => {
-  return [QueryOperator.IN, QueryOperator.NOT_IN].includes(operator)
+  return [QUERY_OPERATORS.IN, QUERY_OPERATORS.NOT_IN].includes(operator)
 }
 
 // 条件组数据
 const conditionGroup = ref({
   id: generateId(),
-  operator: LogicalOperator.AND,
+  operator: LOGICAL_OPERATORS.AND,
   conditions: [],
   childGroups: []
 })
@@ -119,14 +144,14 @@ const initConditionGroup = () => {
   } else {
     conditionGroup.value = {
       id: generateId(),
-      operator: LogicalOperator.AND,
+      operator: LOGICAL_OPERATORS.AND,
       conditions: [
         {
           id: generateId(),
           fieldId: '',
           fieldCode: '',
           fieldName: '',
-          operator: QueryOperator.EQUAL,
+          operator: QUERY_OPERATORS.EQUAL,
           value: '',
           value2: '',
           enabled: true
@@ -144,7 +169,7 @@ const addCondition = () => {
     fieldId: '',
     fieldCode: '',
     fieldName: '',
-    operator: QueryOperator.EQUAL,
+    operator: QUERY_OPERATORS.EQUAL,
     value: '',
     value2: '',
     enabled: true
@@ -164,14 +189,14 @@ const removeCondition = (index) => {
 const addChildGroup = () => {
   conditionGroup.value.childGroups.push({
     id: generateId(),
-    operator: LogicalOperator.OR,
+    operator: LOGICAL_OPERATORS.OR,
     conditions: [
       {
         id: generateId(),
         fieldId: '',
         fieldCode: '',
         fieldName: '',
-        operator: QueryOperator.EQUAL,
+        operator: QUERY_OPERATORS.EQUAL,
         value: '',
         value2: '',
         enabled: true
@@ -199,14 +224,14 @@ const handleFieldSelect = (condition, fieldId) => {
 const resetConditions = () => {
   conditionGroup.value = {
     id: generateId(),
-    operator: LogicalOperator.AND,
+    operator: LOGICAL_OPERATORS.AND,
     conditions: [
       {
         id: generateId(),
         fieldId: '',
         fieldCode: '',
         fieldName: '',
-        operator: QueryOperator.EQUAL,
+        operator: QUERY_OPERATORS.EQUAL,
         value: '',
         value2: '',
         enabled: true
@@ -390,8 +415,8 @@ const formatTime = (time) => {
                 size="large"
                 style="width: 120px"
               >
-                <el-option :label="逻辑与(AND)" :value="LogicalOperator.AND" />
-                <el-option :label="逻辑或(OR)" :value="LogicalOperator.OR" />
+                <el-option :label="逻辑与(AND)" :value="LOGICAL_OPERATORS.AND" />
+                <el-option :label="逻辑或(OR)" :value="LOGICAL_OPERATORS.OR" />
               </el-select>
               <span class="group-label">条件组</span>
             </div>
@@ -531,8 +556,8 @@ const formatTime = (time) => {
                   size="large"
                   style="width: 120px"
                 >
-                  <el-option :label="逻辑与(AND)" :value="LogicalOperator.AND" />
-                  <el-option :label="逻辑或(OR)" :value="LogicalOperator.OR" />
+                  <el-option :label="逻辑与(AND)" :value="LOGICAL_OPERATORS.AND" />
+                  <el-option :label="逻辑或(OR)" :value="LOGICAL_OPERATORS.OR" />
                 </el-select>
                 <span class="group-label">子条件组</span>
                 <el-button
@@ -642,7 +667,7 @@ const formatTime = (time) => {
               </div>
 
               <div class="group-actions">
-                <el-button type="primary" link @click="childGroup.conditions.push({ id: generateId(), fieldId: '', fieldCode: '', fieldName: '', operator: QueryOperator.EQUAL, value: '', value2: '', enabled: true })">
+                <el-button type="primary" link @click="childGroup.conditions.push({ id: generateId(), fieldId: '', fieldCode: '', fieldName: '', operator: QUERY_OPERATORS.EQUAL, value: '', value2: '', enabled: true })">
                   <el-icon><Plus /></el-icon>
                   添加条件
                 </el-button>
