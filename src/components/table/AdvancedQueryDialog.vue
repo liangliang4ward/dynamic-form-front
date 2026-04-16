@@ -27,6 +27,26 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'query', 'saveTemplate'])
 
+// 对话框的可见性（内部状态）
+const dialogVisible = ref(false)
+
+// 监听外部 modelValue 变化，同步到内部状态
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    dialogVisible.value = newVal
+  },
+  { immediate: true }
+)
+
+// 监听内部状态变化，同步到外部
+watch(
+  dialogVisible,
+  (newVal) => {
+    emit('update:modelValue', newVal)
+  }
+)
+
 // 查询模板列表
 const queryTemplates = ref([])
 
@@ -350,7 +370,7 @@ const formatTime = (time) => {
 
 <template>
   <el-dialog
-    v-model="modelValue"
+    v-model="dialogVisible"
     title="高级查询"
     width="900px"
     :close-on-click-modal="false"
