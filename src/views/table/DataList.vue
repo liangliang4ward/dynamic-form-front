@@ -342,7 +342,7 @@ onMounted(() => {
           :label="queryField.field?.fieldName"
         >
           <el-input
-            v-model="searchConditions[queryField.field!.fieldCode]"
+            v-model="searchConditions[queryField.field.fieldCode]"
             :placeholder="`请输入${getQueryTypeLabel(queryField.queryType)}`"
             clearable
             @keyup.enter="handleSearch"
