@@ -255,7 +255,9 @@ const saveAdvancedSettings = () => {
 
   updateField(currentEditingField.value.id, {
     dataSource: currentEditingField.value.dataSource,
-    displayConfig: currentEditingField.value.displayConfig
+    displayConfig: currentEditingField.value.displayConfig,
+    queryConfig: currentEditingField.value.queryConfig,
+    validationConfig: currentEditingField.value.validationConfig
   })
 
   advancedSettingsVisible.value = false
@@ -579,6 +581,7 @@ const getDisplaySummary = (config) => {
         <TableFieldAdvancedSettings
           v-model="currentEditingField"
           :disabled="disabled"
+          :allFields="modelValue"
         />
       </div>
       

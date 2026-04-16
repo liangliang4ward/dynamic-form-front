@@ -1,7 +1,8 @@
-import type { TableConfig, DataRecord } from '@/types/tableTypes'
+import type { TableConfig, DataRecord, QueryTemplate } from '@/types/tableTypes'
 
 const STORAGE_KEY = 'dynamic_form_table_configs'
 const DATA_STORAGE_KEY = 'dynamic_form_data_records'
+const QUERY_TEMPLATE_STORAGE_KEY = 'dynamic_form_query_templates'
 
 /**
  * 从localStorage获取所有表配置
@@ -176,4 +177,98 @@ export function deleteDataRecordsByTableId(tableId: string): number {
   }
   
   return deletedCount
+}
+
+// ==================== 查询模板存储 ====================
+
+/**
+ * 从localStorage获取所有查询模板
+ */
+export function getAllQueryTemplates(): QueryTemplate[] {
+  const data = localStorage.getItem(QUERY_TEMPLATE_STORAGE_KEY)
+  if (!data) {
+    return []
+  }
+  try {
+    return JSON.parse(data) as QueryTemplate[]
+  } catch {
+    return []
+  }
+}
+
+/**
+ * 保存所有查询模板到localStorage
+ */
+export function saveAllQueryTemplates(templates: QueryTemplate[]): void {
+  localStorage.setItem(QUERY_TEMPLATE_STORAGE_KEY, JSON.stringify(templates))
+}
+
+/**
+ * 根据表ID获取查询模板列表
+ */
+export function getQueryTemplatesByTableId(tableId: string): QueryTemplate[] {
+  const templates = getAllQueryTemplates()
+  return templates.filter((t) => t.tableId === tableId)
+}
+
+/**
+ * 根据ID获取查询模板
+ */
+export function getQueryTemplateById(id: string): QueryTemplate | null {
+  const templates = getAllQueryTemplates()
+  return templates.find((t) => t.id === id) || null
+}
+
+/**
+ * 保存查询模板（新增或更新）
+ */
+export function saveQueryTemplate(template: QueryTemplate): void {
+  const templates = getAllQueryTemplates()
+  const index = templates.findIndex((t) => t.id === template.id)
+  
+  const now = new Date().toISOString()
+  if (index >= 0) {
+    templates[index] = { ...template, updateTime: now }
+  } else {
+    templates.push({ ...template, createTime: now, updateTime: now })
+  }
+  
+  saveAllQueryTemplates(templates)
+}
+
+/**
+ * 根据ID删除查询模板
+ */
+export function deleteQueryTemplate(id: string): boolean {
+  const templates = getAllQueryTemplates()
+  const index = templates.findIndex((t) => t.id === id)
+  
+  if (index >= 0) {
+    templates.splice(index, 1)
+    saveAllQueryTemplates(templates)
+    return true
+  }
+  
+  return false
+}
+
+/**
+ * 设置默认查询模板
+ */
+export function setDefaultQueryTemplate(tableId: string, templateId: string): void {
+  const templates = getAllQueryTemplates()
+  templates.forEach((t) => {
+    if (t.tableId === tableId) {
+      t.isDefault = t.id === templateId
+    }
+  })
+  saveAllQueryTemplates(templates)
+}
+
+/**
+ * 获取表的默认查询模板
+ */
+export function getDefaultQueryTemplate(tableId: string): QueryTemplate | null {
+  const templates = getQueryTemplatesByTableId(tableId)
+  return templates.find((t) => t.isDefault) || null
 }
