@@ -9,7 +9,6 @@ import TableBaseForm from '@/components/table/TableBaseForm.vue'
 import TableGroupList from '@/components/table/TableGroupList.vue'
 import TableFieldList from '@/components/table/TableFieldList.vue'
 import TableIndexList from '@/components/table/TableIndexList.vue'
-import TableQueryFieldList from '@/components/table/TableQueryFieldList.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -283,14 +282,6 @@ onBeforeUnmount(() => {
         <el-tab-pane label="索引列表" name="indexes">
           <TableIndexList
             v-model="tableConfig.indexes"
-            :fields="tableConfig.fields"
-            :disabled="isViewMode"
-          />
-        </el-tab-pane>
-
-        <el-tab-pane label="查询字段" name="queryFields">
-          <TableQueryFieldList
-            v-model="tableConfig.queryFields"
             :fields="tableConfig.fields"
             :disabled="isViewMode"
           />
