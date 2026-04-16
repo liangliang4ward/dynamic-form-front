@@ -3,8 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Plus, Edit, Delete, View, MagicStick, Refresh, Search } from '@element-plus/icons-vue'
-import { getTableDetail, getDataList, deleteData, generateMockData } from '@/api/tableMock'
+import { getTableDetail, getDataList, getDataDetail, deleteData, generateMockData, saveData } from '@/api/tableMock'
 import AdvancedQueryDialog from '@/components/table/AdvancedQueryDialog.vue'
+import DynamicForm from '@/components/table/DynamicForm.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -26,6 +27,14 @@ const searchConditions = ref({})
 // 高级查询
 const advancedQueryDialogVisible = ref(false)
 const currentAdvancedConditions = ref(null)
+
+// 数据编辑/查看弹窗
+const dataDialogVisible = ref(false)
+const dataDialogMode = ref('add') // add, edit, view
+const currentDataId = ref('')
+const dialogFormData = ref({})
+const dynamicFormRef = ref(null)
+const dataSaving = ref(false)
 
 // 获取表ID
 const tableId = computed(() => route.query.tableId)
@@ -176,9 +185,25 @@ const handleRefresh = () => {
   loadDataList()
 }
 
+// 弹窗标题
+const dataDialogTitle = computed(() => {
+  const tableName = tableConfig.value?.info?.tableName || ''
+  if (dataDialogMode.value === 'view') return `${tableName} - 查看数据`
+  if (dataDialogMode.value === 'edit') return `${tableName} - 编辑数据`
+  return `${tableName} - 新增数据`
+})
+
+// 弹窗表单是否只读
+const isDialogReadonly = computed(() => {
+  return dataDialogMode.value === 'view'
+})
+
 // 新增数据
 const handleAdd = () => {
-  router.push(`/table/data/edit?tableId=${tableId.value}`)
+  dataDialogMode.value = 'add'
+  currentDataId.value = ''
+  dialogFormData.value = {}
+  dataDialogVisible.value = true
 }
 
 // 生成Mock数据
@@ -225,13 +250,80 @@ const handleGenerateMockData = async () => {
 }
 
 // 查看数据
-const handleView = (row) => {
-  router.push(`/table/data/edit?tableId=${tableId.value}&id=${row.id}&view=true`)
+const handleView = async (row) => {
+  dataDialogMode.value = 'view'
+  currentDataId.value = row.id
+  dialogFormData.value = { ...row.data }
+  dataDialogVisible.value = true
 }
 
 // 编辑数据
-const handleEdit = (row) => {
-  router.push(`/table/data/edit?tableId=${tableId.value}&id=${row.id}`)
+const handleEdit = async (row) => {
+  dataDialogMode.value = 'edit'
+  currentDataId.value = row.id
+  
+  try {
+    const data = await getDataDetail(row.id)
+    if (data) {
+      dialogFormData.value = { ...data.data }
+      dataDialogVisible.value = true
+    } else {
+      ElMessage.error('数据不存在')
+    }
+  } catch (error) {
+    ElMessage.error('加载数据失败')
+    console.error(error)
+  }
+}
+
+// 保存弹窗数据
+const handleSaveData = async () => {
+  if (isDialogReadonly.value) return
+
+  // 校验表单
+  if (dynamicFormRef.value) {
+    const valid = await dynamicFormRef.value.validate()
+    if (!valid) {
+      return
+    }
+  }
+
+  dataSaving.value = true
+  try {
+    const record = {
+      id: currentDataId.value || '',
+      tableId: tableId.value,
+      data: { ...dialogFormData.value },
+      createTime: '',
+      updateTime: ''
+    }
+
+    const result = await saveData(record)
+    if (result.success) {
+      ElMessage.success(result.message)
+      dataDialogVisible.value = false
+      // 刷新数据列表
+      loadDataList()
+    } else {
+      ElMessage.error(result.message)
+    }
+  } catch (error) {
+    ElMessage.error('保存失败')
+    console.error(error)
+  } finally {
+    dataSaving.value = false
+  }
+}
+
+// 关闭弹窗
+const closeDataDialog = () => {
+  dataDialogVisible.value = false
+  dataDialogMode.value = 'add'
+  currentDataId.value = ''
+  dialogFormData.value = {}
+  if (dynamicFormRef.value) {
+    dynamicFormRef.value.resetFields()
+  }
 }
 
 // 删除数据
@@ -478,6 +570,46 @@ onMounted(() => {
       :currentConditionGroup="currentAdvancedConditions"
       @query="handleAdvancedQuery"
     />
+
+    <!-- 数据编辑/查看弹窗 -->
+    <el-dialog
+      v-model="dataDialogVisible"
+      :title="dataDialogTitle"
+      width="800px"
+      :close-on-click-modal="false"
+      destroy-on-close
+      @close="closeDataDialog"
+    >
+      <el-empty
+        v-if="!tableConfig || tableConfig.fields.length === 0"
+        description="该表尚未配置字段，请先配置字段"
+      />
+
+      <template v-else>
+        <DynamicForm
+          ref="dynamicFormRef"
+          :fields="tableConfig.fields"
+          v-model="dialogFormData"
+          :disabled="isDialogReadonly"
+          :readonly="isDialogReadonly"
+          :mode="isDialogReadonly ? 'detail' : 'form'"
+        />
+      </template>
+
+      <template #footer>
+        <el-button @click="closeDataDialog">
+          {{ isDialogReadonly ? '关闭' : '取消' }}
+        </el-button>
+        <el-button
+          v-if="!isDialogReadonly"
+          type="primary"
+          :loading="dataSaving"
+          @click="handleSaveData"
+        >
+          保存
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
